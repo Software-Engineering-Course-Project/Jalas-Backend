@@ -20,6 +20,7 @@ class Meeting(models.Model):
     startTime = models.TimeField(verbose_name='زمان شروع', null=True, blank=True, default=None)
     endTime = models.TimeField(verbose_name='زمان اتمام', null=True, blank=True, default=None)
     status = models.IntegerField(choices=MEET_STATUS, verbose_name='وضعیت جلسه', null=True, blank=True, default=None)
+    room = models.IntegerField(verbose_name='شماره اتاق', null=True, blank=True, default=None)
 
 
 class MeetingParticipant(models.Model):
