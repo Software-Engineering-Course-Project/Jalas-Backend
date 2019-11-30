@@ -1,3 +1,5 @@
+import datetime
+
 from django.contrib.auth.models import User
 from django.db import models
 
@@ -30,7 +32,9 @@ class Poll(models.Model):
 
 
 class Select(models.Model):
-    text = models.TextField('متن', null=True, blank=True)
+    date = models.DateField(verbose_name='تاریخ', default=datetime.datetime.today())
+    startTime = models.TimeField(verbose_name='زمان شروع', default=datetime.datetime.now().time())
+    endTime = models.TimeField(verbose_name='زمان اتمام', default=datetime.datetime.now().time())
     poll = models.ForeignKey(Poll, related_name='selects', on_delete=models.CASCADE, default=None)
 
     @property
