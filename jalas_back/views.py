@@ -2,9 +2,9 @@ import requests
 from django.core import serializers
 from django.http import HttpResponse
 from django.shortcuts import render
-import json
 
 # Create your views here.
+from jalas_back.Serializer import SelectSerializer
 from jalas_back.models import Meeting, Poll, Select, SelectUser
 
 
@@ -30,12 +30,5 @@ def getPolls(request, meeting_id):
 
 def getSelect(request, poll_id):
     selects = Select.objects.filter(poll_id=poll_id)
-    selects_list = []
-    for select in selects:
-        select_object = select
-        select_object.disagree = len(SelectUser.objects.filter(select=select, agreement=1))
-        select_object.agree = len(SelectUser.objects.filter(select=select, agreement=2))
-        selects_list.append(select_object)
-    selects_json = serializers.serialize('json', selects_list)
+    selects_json = SelectSerializer.makeSerial(selects)
     return HttpResponse(selects_json, content_type='application/json')
-

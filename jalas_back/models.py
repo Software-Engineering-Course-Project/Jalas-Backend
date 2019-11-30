@@ -33,6 +33,26 @@ class Select(models.Model):
     text = models.TextField('متن', null=True, blank=True)
     poll = models.ForeignKey(Poll, related_name='selects', on_delete=models.CASCADE, default=None)
 
+    @property
+    def getDisagreeNumber(self):
+        count = 0
+        for vote in self.voted.all():
+            if vote.agreement == 1:
+                count += 1
+        return count
+
+    @property
+    def getAgreeNumber(self):
+        count = 0
+        for vote in self.voted.all():
+            if vote.agreement == 2:
+                count += 1
+        return count
+
+    agree = getAgreeNumber
+    disAgree = getDisagreeNumber
+
+
 
 class SelectUser(models.Model):
     AGGREMENT_CHOICE = (
