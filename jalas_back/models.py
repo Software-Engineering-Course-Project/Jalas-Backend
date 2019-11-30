@@ -4,6 +4,8 @@ from django.contrib.auth.models import User
 from django.db import models
 
 # Create your models here.
+from django.utils import timezone
+
 
 class Meeting(models.Model):
     MEET_STATUS = (
@@ -32,9 +34,9 @@ class Poll(models.Model):
 
 
 class Select(models.Model):
-    date = models.DateField(verbose_name='تاریخ', default=datetime.datetime.today())
-    startTime = models.TimeField(verbose_name='زمان شروع', default=datetime.datetime.now().time())
-    endTime = models.TimeField(verbose_name='زمان اتمام', default=datetime.datetime.now().time())
+    date = models.DateField(verbose_name='تاریخ', default=timezone.now)
+    startTime = models.TimeField(verbose_name='زمان شروع', default=timezone.now)
+    endTime = models.TimeField(verbose_name='زمان اتمام', default=timezone.now)
     poll = models.ForeignKey(Poll, related_name='selects', on_delete=models.CASCADE, default=None)
 
     @property

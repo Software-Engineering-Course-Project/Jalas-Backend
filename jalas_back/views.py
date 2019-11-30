@@ -4,6 +4,7 @@ from django.http import HttpResponse
 from django.shortcuts import render
 
 # Create your views here.
+from Jalas.settings import SITE_URL
 from jalas_back.Serializer import SelectSerializer
 from jalas_back.models import Meeting, Poll, Select, SelectUser
 
