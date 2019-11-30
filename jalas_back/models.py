@@ -30,11 +30,16 @@ class Poll(models.Model):
 
 
 class Select(models.Model):
-    text = models.TextField('متن')
+    text = models.TextField('متن', null=True, blank=True)
     poll = models.ForeignKey(Poll, related_name='selects', on_delete=models.CASCADE, default=None)
 
 
 class SelectUser(models.Model):
-    users = models.ForeignKey(User, related_name='voted', null=True, blank=True, on_delete=models.SET_NULL)
-    selects = models.ForeignKey(Select, related_name='voted', null=True, blank=True, on_delete=models.SET_NULL)
+    AGGREMENT_CHOICE = (
+        (1, 'خیر'),
+        (2, 'بله')
+    )
+    user = models.ForeignKey(User, related_name='voted', null=True, blank=True, on_delete=models.SET_NULL)
+    select = models.ForeignKey(Select, related_name='voted', null=True, blank=True, on_delete=models.SET_NULL)
+    agreement = models.IntegerField(verbose_name='نظر', null=True, choices=AGGREMENT_CHOICE)
 
