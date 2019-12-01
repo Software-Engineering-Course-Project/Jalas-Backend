@@ -21,7 +21,7 @@ def test(request):
         '?start=2019-11-30T12:30:00&end=2019-11-30T14:30:00')
         ret = req.json()
     except:
-        return JsonResponse({"err": 10})
+        return JsonResponse({"status": 10})
     return JsonResponse(ret)
 
 
@@ -41,8 +41,11 @@ class MeetingsView(APIView):
             meeting.startTime = meeting.startTime
             meeting.endTime = meeting.endTime
             meeting.save()
-            return redirect(SITE_URL + 'api/available_room/' + str(meeting.id))
-        return JsonResponse({"err": 100})
+            return JsonResponse({"status": 200,
+                                 "text": 'Meeting set up.'
+                                 })
+        return JsonResponse({"status": 100,
+                             "text": 'Meeting doesn\'t exist.'})
 
 #
 # def getMeeting(request):
@@ -87,7 +90,7 @@ class SelectsView(View):
 #         meeting.endTime = meeting.endTime
 #         meeting.save()
 #         return redirect(SITE_URL + 'api/available_room/' + str(meeting.id))
-#     return JsonResponse({"err": 100})
+#     return JsonResponse({"status": 100})
 
 
 class RoomsView(APIView):
@@ -99,8 +102,10 @@ class RoomsView(APIView):
                                '?start=' + str(select.date) + 'T' + str(select.startTime) +
                                '&end=' + str(select.date) + 'T' + str(select.endTime))
             return JsonResponse(req.json())
-        # err = 100 means that this meeting doesn't exist.
-        return JsonResponse({"err": 100})
+        # status = 100 means that this meeting doesn't exist.
+        return JsonResponse({"status": 100,
+                             "text": "Meeting doesn\'t exist."
+                             })
 
     def post(self, request, select_id):
         try:
@@ -109,16 +114,16 @@ class RoomsView(APIView):
             meeting = Meeting.objects.filter(id=meeting_id)
             if meeting:
                 meeting = meeting[0]
-                # if meeting.room:
-                #     # err = 91 means that this meeting has a room.
-                #     return JsonResponse({"err": 91})
+                if meeting.room:
+                    # status = 91 means that this meeting has a room.
+                    return JsonResponse({"status": 91})
                 req = requests.get('http://213.233.176.40/available_rooms' +
                                    '?start=' + str(meeting.date) + 'T' + str(meeting.startTime) +
                                    '&end=' + str(meeting.date) + 'T' + str(meeting.endTime))
                 availableRooms = req.json()['availableRooms']
                 if room_number not in availableRooms:
-                    # err = 90 means that this room has been reserved when you want to reserve it.
-                    return JsonResponse({"err": 90})
+                    # status = 90 means that this room has been reserved when you want to reserve it.
+                    return JsonResponse({"status": 90})
                 meeting.room = room_number
                 meeting.status = 2
                 meeting.save()
@@ -133,24 +138,27 @@ class RoomsView(APIView):
                 print(str(meeting.date) + 'T' + str(meeting.endTime))
                 print(str(res.json()))
                 return redirect(SITE_URL + 'api/show_meeting/' + str(meeting_id))
-            # err = 100 means that this meeting doesn't exist.
-            return JsonResponse({"err": 100})
+            # status = 100 means that this meeting doesn't exist.
+            return JsonResponse({"status": 100,
+                                 "text": "Meeting doesn\'t exist."
+                                 })
         except:
-            return JsonResponse({"err": 0})
+            return JsonResponse({"status": 0,
+                                 "text": 'An Exception occure, please try again.'})
 
 # def getAvailaibleRoom(request, meeting_id):
 #     meeting = Meeting.objects.filter(id=meeting_id)
 #     if meeting:
 #         meeting = meeting[0]
 #         if not meeting.date or meeting.endTime or meeting.startTime:
-#             # err = 100 means that this meeting doesn't exist.
-#             return JsonResponse({"err": 100})
+#             # status = 100 means that this meeting doesn't exist.
+#             return JsonResponse({"status": 100})
 #         req = requests.get('http://213.233.176.40/available_rooms' +
 #                            '?start=' + str(meeting.date) + 'T' + str(meeting.startTime) +
 #                            '&end=' + str(meeting.date) + 'T' + str(meeting.endTime))
 #         return HttpResponse(str(req.json()))
-#     # err = 100 means that this meeting doesn't exist.
-#     return JsonResponse({"err": 100})
+#     # status = 100 means that this meeting doesn't exist.
+#     return JsonResponse({"status": 100})
 
 
 # def setMeetingRoom(request, meeting_id, room_number):
@@ -158,21 +166,21 @@ class RoomsView(APIView):
 #     if meeting:
 #         meeting = meeting[0]
 #         if meeting.room:
-#             # err = 91 means that this meeting has a room.
-#             return HttpResponse('{"err" : 91}')
+#             # status = 91 means that this meeting has a room.
+#             return HttpResponse('{"status" : 91}')
 #         req = requests.get('http://213.233.176.40/available_rooms' +
 #                            '?start=' + str(meeting.date) + 'T' + str(meeting.startTime) +
 #                            '&end=' + str(meeting.date) + 'T' + str(meeting.endTime))
 #         availableRooms = req.json()['availableRooms']
 #         if room_number not in availableRooms:
-#             # err = 90 means that this room has been reserved when you want to reserve it.
-#             return HttpResponse('{"err" : 90}')
+#             # status = 90 means that this room has been reserved when you want to reserve it.
+#             return HttpResponse('{"status" : 90}')
 #         meeting.room = room_number
 #         meeting.status = 2
 #         meeting.save()
 #         return redirect(SITE_URL + 'api/show_meeting/' + str(meeting_id))
-#     # err = 100 means that this meeting doesn't exist.
-#     return JsonResponse({"err": 100})
+#     # status = 100 means that this meeting doesn't exist.
+#     return JsonResponse({"status": 100})
 
 class PollView(APIView):
     def get(self, request, poll_id):
@@ -180,7 +188,9 @@ class PollView(APIView):
         if poll:
             poll_json = serializers.serialize('json', poll)
             return HttpResponse(poll_json, content_type='application/json')
-        return JsonResponse({"err": 20})
+        return JsonResponse({"status": 20,
+                             "text": 'Poll doesn\'t exist.'
+                             })
 
 
 
@@ -195,5 +205,6 @@ def showMeeting(request, meeting_id):
         # response['Access-Control-Allow-Origin'] = XS_SHARING_ALLOWED_ORIGINS
         # response['Access-Control-Allow-Methods'] = ",".join(XS_SHARING_ALLOWED_METHODS)
         return response
-    # err = 100 means that this meeting doesn't exist.
-    return JsonResponse({"err": 100})
+    # status = 100 means that this meeting doesn't exist.
+    return JsonResponse({"status": 100,
+                             "text": 'Meeting doesn\'t exist.'})
