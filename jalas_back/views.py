@@ -91,21 +91,18 @@ class SelectsView(View):
 
 
 class RoomsView(APIView):
-    def get(self, request, meeting_id):
-        meeting = Meeting.objects.filter(id=meeting_id)
-        if meeting:
-            meeting = meeting[0]
-            if not meeting.date or not meeting.endTime or not meeting.startTime:
-                # err = 100 means that this meeting doesn't exist.
-                return JsonResponse({"err": 100})
+    def get(self, request, select_id):
+        select = Meeting.objects.filter(id=select_id)
+        if select:
+            select = select[0]
             req = requests.get('http://213.233.176.40/available_rooms' +
-                               '?start=' + str(meeting.date) + 'T' + str(meeting.startTime) +
-                               '&end=' + str(meeting.date) + 'T' + str(meeting.endTime))
+                               '?start=' + str(select.date) + 'T' + str(select.startTime) +
+                               '&end=' + str(select.date) + 'T' + str(select.endTime))
             return JsonResponse(req.json())
         # err = 100 means that this meeting doesn't exist.
         return JsonResponse({"err": 100})
 
-    def post(self, request, meeting_id):
+    def post(self, request, select_id):
         try:
             meeting_id = int(request.POST['meeting_id'])
             room_number = int(request.POST['room_number'])
