@@ -127,3 +127,4 @@ STATIC_URL = '/static/'
 SITE_URL = 'http://localhost:8000/'
 
 CORS_ORIGIN_ALLOW_ALL = True
+CORS_ALLOW_CREDENTIALS = False
