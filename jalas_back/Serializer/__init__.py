@@ -10,6 +10,6 @@ class SelectSerializer:
         selects_json = serializers.serialize('json', selects)
         selects_list = json.loads(selects_json)
         for index, val in enumerate(selects_list):
-            selects_list[index]['fields']['agree'] = selects[index].agree
-            selects_list[index]['fields']['disAgree'] = selects[index].disAgree
+            selects_list[index]['fields']['agree'] = selects[index].agree if selects[index].agree else 0
+            selects_list[index]['fields']['disAgree'] = selects[index].disAgree if selects[index].agree else 0
         return json.dumps(selects_list)

@@ -109,21 +109,32 @@ class RoomsView(APIView):
 
     def post(self, request, select_id):
         try:
-            meeting_id = int(request.POST['meeting_id'])
+            select_id = int(request.POST['select_id'])
             room_number = int(request.POST['room_number'])
-            meeting = Meeting.objects.filter(id=meeting_id)
+            select = None
+            try:
+                select = Select.objects.get(id=select_id)
+            except:
+                JsonResponse({
+                    "status": 100,
+                    "text": 'There is no this select id.'
+                })
+            meeting = select.poll.meeting
             if meeting:
-                meeting = meeting[0]
                 if meeting.room:
                     # status = 91 means that this meeting has a room.
-                    return JsonResponse({"status": 91})
+                    return JsonResponse({
+                        "status": 91,
+                        "text": 'This meeting has a room.'
+                    })
                 req = requests.get('http://213.233.176.40/available_rooms' +
                                    '?start=' + str(meeting.date) + 'T' + str(meeting.startTime) +
                                    '&end=' + str(meeting.date) + 'T' + str(meeting.endTime))
                 availableRooms = req.json()['availableRooms']
                 if room_number not in availableRooms:
                     # status = 90 means that this room has been reserved when you want to reserve it.
-                    return JsonResponse({"status": 90})
+                    return JsonResponse({"status": 90,
+                                         "text": 'This room reserved when you want to reserve it.'})
                 meeting.room = room_number
                 meeting.status = 2
                 meeting.save()
@@ -134,9 +145,9 @@ class RoomsView(APIView):
                                   "end": str(meeting.date) + 'T' + str(meeting.endTime),
                               }
                         )
-                print(str(meeting.date) + 'T' + str(meeting.startTime))
-                print(str(meeting.date) + 'T' + str(meeting.endTime))
-                print(str(res.json()))
+                # print(str(meeting.date) + 'T' + str(meeting.startTime))
+                # print(str(meeting.date) + 'T' + str(meeting.endTime))
+                # print(str(res.json()))
                 return JsonResponse({
                     "status": 200,
                     "text": 'Room reserved successfully'
