@@ -192,8 +192,8 @@ def showMeeting(request, meeting_id):
         XS_SHARING_ALLOWED_ORIGINS = '*'
         XS_SHARING_ALLOWED_METHODS = ['POST', 'GET', 'OPTIONS', 'PUT', 'DELETE']
         response = HttpResponse(meeting_json, content_type='application/json')
-        response['Access-Control-Allow-Origin'] = XS_SHARING_ALLOWED_ORIGINS
-        response['Access-Control-Allow-Methods'] = ",".join(XS_SHARING_ALLOWED_METHODS)
+        # response['Access-Control-Allow-Origin'] = XS_SHARING_ALLOWED_ORIGINS
+        # response['Access-Control-Allow-Methods'] = ",".join(XS_SHARING_ALLOWED_METHODS)
         return response
     # err = 100 means that this meeting doesn't exist.
     return JsonResponse({"err": 100})
