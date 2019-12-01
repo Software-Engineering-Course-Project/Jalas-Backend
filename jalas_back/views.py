@@ -25,7 +25,7 @@ def test(request):
     return JsonResponse(ret)
 
 
-class MeetingView(APIView):
+class MeetingsView(APIView):
     def get(self, request):
         meetings = Meeting.objects.all()
         meetings_json = serializers.serialize('json', meetings)
@@ -51,7 +51,7 @@ class MeetingView(APIView):
 #     return HttpResponse(meetings_json, content_type='application/json')
 
 
-class PollView(APIView):
+class PollsView(APIView):
     def get(self, request, meeting_id):
         polls = Poll.objects.filter(meeting_id=meeting_id)
         polls_json = serializers.serialize('json', polls)
@@ -64,7 +64,7 @@ class PollView(APIView):
 #     return HttpResponse(polls_json, content_type='application/json')
 
 
-class SelectView(View):
+class SelectsView(View):
 
     def get(self, request, poll_id):
         selects = Select.objects.filter(poll_id=poll_id)
@@ -90,7 +90,7 @@ class SelectView(View):
 #     return JsonResponse({"err": 100})
 
 
-class RoomView(APIView):
+class RoomsView(APIView):
     def get(self, request, meeting_id):
         meeting = Meeting.objects.filter(id=meeting_id)
         if meeting:
@@ -176,6 +176,16 @@ class RoomView(APIView):
 #         return redirect(SITE_URL + 'api/show_meeting/' + str(meeting_id))
 #     # err = 100 means that this meeting doesn't exist.
 #     return JsonResponse({"err": 100})
+
+class PollView(APIView):
+    def get(self, request, poll_id):
+        poll = Poll.objects.filter(id=poll_id)
+        if poll:
+            poll_json = serializers.serialize('json', poll)
+            return HttpResponse(poll_json, content_type='application/json')
+        return JsonResponse({"err": 20})
+
+
 
 
 def showMeeting(request, meeting_id):
