@@ -3,7 +3,7 @@ import json
 import requests
 from django.core import serializers
 from django.http import HttpResponse, JsonResponse
-from django.shortcuts import render, redirect
+from django.shortcuts import render
 
 # Create your views here.
 from django.views.generic.base import View
@@ -137,7 +137,11 @@ class RoomsView(APIView):
                 print(str(meeting.date) + 'T' + str(meeting.startTime))
                 print(str(meeting.date) + 'T' + str(meeting.endTime))
                 print(str(res.json()))
-                return redirect(SITE_URL + 'api/show_meeting/' + str(meeting_id))
+                return JsonResponse({
+                    "status": 200,
+                    "text": 'Room reserved successfully'
+
+                })
             # status = 100 means that this meeting doesn't exist.
             return JsonResponse({"status": 100,
                                  "text": "Meeting doesn\'t exist."
