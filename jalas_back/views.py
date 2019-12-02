@@ -278,7 +278,7 @@ class PollView(APIView):
             return HttpResponse(poll_json, content_type='application/json')
         except:
             return HttpResponse400Error({
-                "text": 'this poll doesn\'t exist.'
+                'this poll doesn\'t exist.'
             })
 
 
