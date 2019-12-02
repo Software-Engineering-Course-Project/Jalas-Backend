@@ -137,3 +137,5 @@ SITE_URL = 'http://localhost:8000/'
 
 CORS_ORIGIN_ALLOW_ALL = True
 CORS_ALLOW_CREDENTIALS = False
+
+API_ADDRESS = 'http://213.233.176.40/'
