@@ -10,6 +10,7 @@ from django.views.generic.base import View
 from rest_framework.views import APIView
 
 from Jalas.settings import SITE_URL
+from jalas_back.HttpResponces import HttpResponce400Error
 from jalas_back.Serializer import SelectSerializer
 from jalas_back.models import Meeting, Poll, Select
 
@@ -203,9 +204,9 @@ class PollView(APIView):
         if poll:
             poll_json = serializers.serialize('json', poll)
             return HttpResponse(poll_json, content_type='application/json')
-        return JsonResponse({"status": 20,
-                             "text": 'Poll doesn\'t exist.'
-                             })
+        return HttpResponce400Error({
+            "text": 'this poll doesn\'t exist.'
+        })
 
 
 
