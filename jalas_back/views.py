@@ -165,7 +165,7 @@ class SetRoomView(APIView):
                     if res.status_code == 200:
                         meeting.room = room
                         meeting.save()
-                        # TODO: Send mail
+                        self.sendMail([meeting.owner.email, ], meeting)
                         meeting_json = serializers.serialize('json', [meeting])
                         return HttpResponse(meeting_json, content_type='application/json')
                     elif res.status_code == 400:
@@ -181,10 +181,11 @@ class SetRoomView(APIView):
             })
 
     @staticmethod
-    def sendMail(to):
-        subject = ''
-
-
+    def sendMail(to, meeting):
+        subject = meeting.title
+        body = meeting.text
+        from_email = settings.EMAIL_HOST_USER
+        send_mail(subject, body, from_email, to, fail_silently=False)
 
     #
     # def post(self, request, select_id):
