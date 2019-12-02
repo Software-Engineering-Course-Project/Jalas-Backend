@@ -161,7 +161,7 @@ class SetRoomView(APIView):
                         return HttpResponse({
                             "Set room successfully."
                         })
-                    elif res.status_code == 404:
+                    elif res.status_code == 400:
                         return HttpResponse404Error({
                             "Room Not found"
                         })

@@ -57,7 +57,7 @@ class Select(models.Model):
         return count
 
     agree = getAgreeNumber
-    disAgree = getDisagreeNumber
+    disagree = getDisagreeNumber
 
 
 
