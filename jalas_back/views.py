@@ -277,7 +277,7 @@ class PollView(APIView):
             poll_json = serializers.serialize('json', [poll])
             return HttpResponse(poll_json, content_type='application/json')
         except:
-            return HttpResponse400Error({
+            return HttpResponse404Error({
                 'this poll doesn\'t exist.'
             })
 
