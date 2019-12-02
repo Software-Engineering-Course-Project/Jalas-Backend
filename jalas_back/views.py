@@ -289,6 +289,22 @@ class PollView(APIView):
             })
 
 
+class SetCancel(APIView):
+    def get(self, request, select_id):
+        try:
+            select = Select.objects.get(id=select_id)
+            meeting = select.poll.meeting
+            meeting.isCancel = True
+            meeting.status = 4
+            meeting.save()
+            meeting_json = serializers.serialize('json', [meeting])
+            return HttpResponse(meeting_json, content_type='application/json')
+
+        except:
+            return HttpResponse404Error({
+                'this select doesn\'t exist.'
+            })
+
 
 
 def showMeeting(request, select_id):
