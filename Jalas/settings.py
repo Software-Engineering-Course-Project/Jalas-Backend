@@ -38,7 +38,6 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'jalas_back',
-    'frontend',
     'corsheaders',
     'data_access',
 ]
