@@ -12,6 +12,7 @@ from rest_framework.views import APIView
 
 from Jalas import settings
 from Jalas.settings import SITE_URL
+from data_access.accress_logic import GetMeetings, GetPolls, GetSelects
 from jalas_back.HttpResponces import HttpResponse400Error, HttpResponse404Error, HttpResponse500Error
 from jalas_back.Serializer import SelectSerializer
 from jalas_back.models import Meeting, Poll, Select
@@ -30,7 +31,7 @@ def test(request):
 
 class MeetingsView(APIView):
     def get(self, request):
-        meetings = Meeting.objects.all()
+        meetings = GetMeetings.all()
         meetings_json = serializers.serialize('json', meetings)
         return HttpResponse(meetings_json, content_type='application/json')
 
@@ -59,7 +60,7 @@ class MeetingsView(APIView):
 
 class PollsView(APIView):
     def get(self, request, meeting_id):
-        polls = Poll.objects.filter(meeting_id=meeting_id)
+        polls = GetPolls.listByMeeting(meeting_id)
         polls_json = serializers.serialize('json', polls)
         return HttpResponse(polls_json, content_type='application/json')
 
@@ -73,7 +74,7 @@ class PollsView(APIView):
 class SelectsView(View):
 
     def get(self, request, poll_id):
-        selects = Select.objects.filter(poll_id=poll_id)
+        selects = GetSelects.listByPoll(poll_id)
         selects_json = SelectSerializer.makeSerial(selects)
         return HttpResponse(selects_json, content_type='application/json')
 
@@ -99,7 +100,7 @@ class SelectsView(View):
 class RoomsView(APIView):
     def get(self, request, select_id):
         try:
-            select = Select.objects.get(id=select_id)
+            select = GetSelects.ById(select_id)
             try:
                 req = requests.get('http://213.233.176.40/available_rooms' +
                                    '?start=' + str(select.date) + 'T' + str(select.startTime) +
@@ -123,7 +124,7 @@ class RoomsView(APIView):
 class SetDateView(APIView):
     def get(self, request, select_id):
         try:
-            select = Select.objects.get(id=select_id)
+            select = GetSelects.ById(select_id)
             meeting = select.poll.meeting
             meeting.startTime = select.startTime
             meeting.endTime = select.endTime
@@ -139,7 +140,7 @@ class SetDateView(APIView):
 class SetRoomView(APIView):
     def get(self, request, room, select_id):
         try:
-            select = Select.objects.get(id=select_id)
+            select = GetSelects.ById(select_id)
             meeting = select.poll.meeting
             if meeting.room:
                 return HttpResponse({
@@ -154,7 +155,7 @@ class SetRoomView(APIView):
                                                   "end": str(meeting.date) + 'T' + str(meeting.endTime),
                                               }
                                         )
-                    select = Select.objects.get(id=select_id)
+                    select = GetSelects.ById(select_id)
                     meeting = select.poll.meeting
                     if meeting.isCancel:
                         meeting.status = 4
@@ -281,7 +282,7 @@ class SetRoomView(APIView):
 class PollView(APIView):
     def get(self, request, poll_id):
         try:
-            poll = Poll.objects.get(id=poll_id)
+            poll = GetPolls.ById(poll_id)
             poll_json = serializers.serialize('json', [poll])
             return HttpResponse(poll_json, content_type='application/json')
         except:
@@ -293,7 +294,7 @@ class PollView(APIView):
 class SetCancel(APIView):
     def get(self, request, select_id):
         try:
-            select = Select.objects.get(id=select_id)
+            select = GetSelects.ById(select_id)
             meeting = select.poll.meeting
             meeting.isCancel = True
             meeting.status = 4
@@ -310,7 +311,7 @@ class SetCancel(APIView):
 
 def showMeeting(request, select_id):
     try:
-        select = Select.objects.get(id=select_id)
+        select = GetSelects.ById(select_id)
         meeting = select.poll.meeting
         meeting_json = serializers.serialize('json', [meeting])
         return HttpResponse(meeting_json, content_type='application/json')

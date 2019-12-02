@@ -40,6 +40,7 @@ INSTALLED_APPS = [
     'jalas_back',
     'frontend',
     'corsheaders',
+    'data_access',
 ]
 
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
