@@ -43,12 +43,12 @@ INSTALLED_APPS = [
 ]
 
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-EMAIL_HOST = 'smtp.live.com'
+EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_USE_TLS = True
 EMAIL_PORT = 587
-DEFAULT_FROM_EMAIL = 'lesmiserable@outlook.com'
-EMAIL_HOST_USER = 'lesmiserable@outlook.com'
-EMAIL_HOST_PASSWORD = 'hadi_ali_navid'
+DEFAULT_FROM_EMAIL = 'mohammadhadi.omidi92@gmail.com'
+EMAIL_HOST_USER = 'mohammadhadi.omidi92@gmail.com'
+EMAIL_HOST_PASSWORD = '09379827700'
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',

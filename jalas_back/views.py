@@ -154,15 +154,20 @@ class SetRoomView(APIView):
                                                   "end": str(meeting.date) + 'T' + str(meeting.endTime),
                                               }
                                         )
-                    print(str(meeting.date) + 'T' + str(meeting.startTime))
-                    print(str(meeting.date) + 'T' + str(meeting.endTime))
+                    select = Select.objects.get(id=select_id)
+                    meeting = select.poll.meeting
+                    if meeting.isCancel:
+                        meeting.status = 4
+                        meeting.save()
+                        meeting_json = serializers.serialize('json', [meeting])
+                        return HttpResponse(meeting_json, content_type='application/json')
+
                     if res.status_code == 200:
                         meeting.room = room
                         meeting.save()
                         # TODO: Send mail
-                        return HttpResponse({
-                            "Set room successfully."
-                        })
+                        meeting_json = serializers.serialize('json', [meeting])
+                        return HttpResponse(meeting_json, content_type='application/json')
                     elif res.status_code == 400:
                         return HttpResponse404Error({
                             "Room Not found"
@@ -177,7 +182,7 @@ class SetRoomView(APIView):
 
     @staticmethod
     def sendMail(to):
-        pass
+        subject = ''
 
 
 

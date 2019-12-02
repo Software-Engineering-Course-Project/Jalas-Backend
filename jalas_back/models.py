@@ -12,6 +12,7 @@ class Meeting(models.Model):
         (1, 'در انتظار اتاق'),
         (2, 'رزرو کامل'),
         (3, 'برگزار شده'),
+        (4, 'لغو شده'),
     )
     title = models.CharField('عنوان', max_length=100)
     text = models.TextField('متن')
@@ -21,6 +22,7 @@ class Meeting(models.Model):
     endTime = models.TimeField(verbose_name='زمان اتمام', null=True, blank=True, default=None)
     status = models.IntegerField(choices=MEET_STATUS, verbose_name='وضعیت جلسه', null=True, blank=True, default=None)
     room = models.IntegerField(verbose_name='شماره اتاق', null=True, blank=True, default=None)
+    isCancel = models.BooleanField(verbose_name='وضعیت لغو', default=False, blank=True)
 
 
 class MeetingParticipant(models.Model):
