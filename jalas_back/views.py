@@ -200,16 +200,18 @@ class ShowLogs(APIView):
         return HttpResponse(res)
 
 
-def showMeeting(request, select_id):
-    try:
-        select = GetSelects.ById(select_id)
-        meeting = select.poll.meeting
-        meeting_json = serializers.serialize('json', [meeting])
-        return HttpResponse(meeting_json, content_type='application/json')
-    except:
-        return HttpResponse404Error(
-            "This select_id doesn\'t exist."
-        )
+class ShowMeeting(APIView):
+    def get(self, request, select_id):
+        try:
+            select = GetSelects.ById(select_id)
+            meeting = select.poll.meeting
+            meeting_json = serializers.serialize('json', [meeting])
+            return HttpResponse(meeting_json, content_type='application/json')
+        except:
+            return HttpResponse404Error(
+                "This select_id doesn\'t exist."
+            )
+
 
 def test_send_email(request):
     send_mail('salam', 'jalas', settings.DEFAULT_FROM_EMAIL, ['mohammadhadi.omidi92@gmail.com',], fail_silently=False)
