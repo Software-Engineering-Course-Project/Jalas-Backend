@@ -193,6 +193,7 @@ class ShowLogs(APIView):
             end = int(end)
             start = int(start)
             overall_time += (end - start)
+        overall_time = overall_time if overall_time > 0 else 0
         avg = overall_time / len(reservatoinTimes) if reservedRoomNum else 0
         canceledMeetings = GetMeetings.canceled()
         canceledNumber = len(canceledMeetings)
