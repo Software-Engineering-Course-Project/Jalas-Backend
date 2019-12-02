@@ -2,6 +2,7 @@ import json
 
 import requests
 from django.core import serializers
+from django.core.mail import send_mail
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import render
 
@@ -9,6 +10,7 @@ from django.shortcuts import render
 from django.views.generic.base import View
 from rest_framework.views import APIView
 
+from Jalas import settings
 from Jalas.settings import SITE_URL
 from jalas_back.HttpResponces import HttpResponse400Error, HttpResponse404Error, HttpResponse500Error
 from jalas_back.Serializer import SelectSerializer
@@ -122,7 +124,7 @@ class SetDateView(APIView):
     def get(self, request, select_id):
         try:
             select = Select.objects.get(id=select_id)
-            meeting = select.poll.meetings
+            meeting = select.poll.meeting
             meeting.startTime = select.startTime
             meeting.endTime = select.endTime
             meeting.date = select.date
@@ -294,3 +296,7 @@ def showMeeting(request, select_id):
         return HttpResponse404Error(
             "This select_id doesn\'t exist."
         )
+
+def test_send_email(request):
+    send_mail('salam', 'jalas', settings.DEFAULT_FROM_EMAIL, ['mohammadhadi.omidi92@gmail.com',], fail_silently=False)
+    return HttpResponse("ssss")

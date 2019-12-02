@@ -11,5 +11,6 @@ urlpatterns = [
     path('show_meeting/<int:select_id>', views.showMeeting),
     path('poll/<int:poll_id>', views.PollView.as_view()),
     path('set_room/<int:room>/<int:select_id>', views.SetRoomView.as_view()),
-    path('set_date/<int:select_id>/', views.SetDateView.as_view())
+    path('set_date/<int:select_id>/', views.SetDateView.as_view()),
+    path('test_email/', views.test_send_email)
 ]

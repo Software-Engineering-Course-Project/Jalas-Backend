@@ -42,6 +42,14 @@ INSTALLED_APPS = [
     'corsheaders',
 ]
 
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.live.com'
+EMAIL_USE_TLS = True
+EMAIL_PORT = 587
+DEFAULT_FROM_EMAIL = 'lesmiserable@outlook.com'
+EMAIL_HOST_USER = 'lesmiserable@outlook.com'
+EMAIL_HOST_PASSWORD = 'hadi_ali_navid'
+
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
