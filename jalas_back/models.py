@@ -20,7 +20,7 @@ class Meeting(models.Model):
     date = models.DateField(verbose_name='تاریخ', null=True, blank=True, default=None)
     startTime = models.TimeField(verbose_name='زمان شروع', null=True, blank=True, default=None)
     endTime = models.TimeField(verbose_name='زمان اتمام', null=True, blank=True, default=None)
-    status = models.IntegerField(choices=MEET_STATUS, verbose_name='وضعیت جلسه', null=True, blank=True, default=None)
+    status = models.IntegerField(choices=MEET_STATUS, verbose_name='وضعیت جلسه', null=True, blank=True, default=1)
     room = models.IntegerField(verbose_name='شماره اتاق', null=True, blank=True, default=None)
     isCancel = models.BooleanField(verbose_name='وضعیت لغو', default=False, blank=True)
 
@@ -72,3 +72,7 @@ class SelectUser(models.Model):
     select = models.ForeignKey(Select, related_name='voted', null=True, blank=True, on_delete=models.SET_NULL)
     agreement = models.IntegerField(verbose_name='نظر', null=True, choices=AGGREMENT_CHOICE)
 
+class ReservationTime(models.Model):
+    reservationStartTime = models.TimeField(verbose_name='زمان شروع', null=True, blank=True, default=None)
+    reservationEndTime = models.TimeField(verbose_name='زمان پایان', null=True, blank=True, default=None)
+    meeting = models.ForeignKey(Meeting, related_name='reserveDuration', on_delete=models.SET_NULL, null=True, unique=True)

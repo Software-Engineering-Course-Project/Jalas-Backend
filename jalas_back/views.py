@@ -12,10 +12,10 @@ from rest_framework.views import APIView
 
 from Jalas import settings
 from Jalas.settings import SITE_URL
-from data_access.accress_logic import GetMeetings, GetPolls, GetSelects
+from data_access.accress_logic import GetMeetings, GetPolls, GetSelects, SetReservationTimes, SetMeeting
 from jalas_back.HttpResponces import HttpResponse400Error, HttpResponse404Error, HttpResponse500Error
 from jalas_back.Serializer import SelectSerializer
-from jalas_back.models import Meeting, Poll, Select
+from jalas_back.models import Meeting, Poll, Select, ReservationTime
 
 
 def test(request):
@@ -44,7 +44,7 @@ class MeetingsView(APIView):
     #         meeting.date = select.date
     #         meeting.startTime = meeting.startTime
     #         meeting.endTime = meeting.endTime
-    #         meeting.save()
+    #         SetMeeting.save(meeting)
     #         return JsonResponse({"status": 200,
     #                              "text": 'Meeting set up.'
     #                              })
@@ -92,7 +92,7 @@ class SelectsView(View):
 #         meeting.date = select.date
 #         meeting.startTime = meeting.startTime
 #         meeting.endTime = meeting.endTime
-#         meeting.save()
+#         SetMeeting.save(meeting)
 #         return redirect(SITE_URL + 'api/available_room/' + str(meeting.id))
 #     return JsonResponse({"status": 100})
 
@@ -129,7 +129,8 @@ class SetDateView(APIView):
             meeting.startTime = select.startTime
             meeting.endTime = select.endTime
             meeting.date = select.date
-            meeting.save()
+            SetMeeting.save(meeting)
+            SetReservationTimes.startTime(meeting.id)
             return HttpResponse("Set date and time successfully")
         except:
             return HttpResponse404Error({
@@ -158,14 +159,14 @@ class SetRoomView(APIView):
                     select = GetSelects.ById(select_id)
                     meeting = select.poll.meeting
                     if meeting.isCancel:
-                        meeting.status = 4
-                        meeting.save()
                         meeting_json = serializers.serialize('json', [meeting])
                         return HttpResponse(meeting_json, content_type='application/json')
 
                     if res.status_code == 200:
                         meeting.room = room
-                        meeting.save()
+                        meeting.status = 2
+                        SetReservationTimes.endTime(meeting.id)
+                        SetMeeting.save(meeting)
                         self.sendMail([meeting.owner.email, ], meeting)
                         meeting_json = serializers.serialize('json', [meeting])
                         return HttpResponse(meeting_json, content_type='application/json')
@@ -174,7 +175,11 @@ class SetRoomView(APIView):
                             "Room Not found"
                         })
                 except:
-                    pass
+                    select = GetSelects.ById(select_id)
+                    meeting = select.poll.meeting
+                    if meeting.isCancel:
+                        meeting_json = serializers.serialize('json', [meeting])
+                        return HttpResponse(meeting_json, content_type='application/json')
 
         except:
             return HttpResponse404Error({
@@ -219,7 +224,7 @@ class SetRoomView(APIView):
     #                                      "text": 'This room reserved when you want to reserve it.'})
     #             meeting.room = room_number
     #             meeting.status = 2
-    #             meeting.save()
+    #             SetMeeting.save(meeting)
     #             res = requests.post(url='http://213.233.176.40/rooms/210/reserve',
     #                           data={
     #                               "username": 'mh.omidi',
@@ -274,7 +279,7 @@ class SetRoomView(APIView):
 #             return HttpResponse('{"status" : 90}')
 #         meeting.room = room_number
 #         meeting.status = 2
-#         meeting.save()
+#         SetMeeting.save(meeting)
 #         return redirect(SITE_URL + 'api/show_meeting/' + str(meeting_id))
 #     # status = 100 means that this meeting doesn't exist.
 #     return JsonResponse({"status": 100})
@@ -298,7 +303,8 @@ class SetCancel(APIView):
             meeting = select.poll.meeting
             meeting.isCancel = True
             meeting.status = 4
-            meeting.save()
+            SetMeeting.save(meeting)
+            SetReservationTimes.delete(meeting)
             meeting_json = serializers.serialize('json', [meeting])
             return HttpResponse(meeting_json, content_type='application/json')
 
@@ -307,6 +313,25 @@ class SetCancel(APIView):
                 'this select doesn\'t exist.'
             })
 
+class ShowLogs(APIView):
+    def get(self, request):
+        overall_time = 0
+        reservedRoomNum = 0
+        reservatoinTimes = ReservationTime.objects.all()
+        for reserve in reservatoinTimes:
+            reservedRoomNum += 1
+            start = reserve.reservationStartTime.strftime("%s")
+            end = reserve.reservationEndTime.strftime("%s")
+            end = int(end)
+            start = int(start)
+            overall_time += (end - start)
+        avg = overall_time / len(reservatoinTimes) if reservedRoomNum else 0
+        canceledMeetings = GetMeetings.canceled()
+        canceledNumber = len(canceledMeetings)
+        res = "Till now: <br> Average time duration for each reservation is " + str(avg) + ' sec '+\
+            "<br> " + 'Canceled meeting number is ' + str(canceledNumber) +\
+            "<br>" + 'Reserved Room number is ' + str(reservedRoomNum)
+        return HttpResponse(res)
 
 
 def showMeeting(request, select_id):

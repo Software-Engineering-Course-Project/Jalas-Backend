@@ -14,4 +14,5 @@ urlpatterns = [
     path('set_date/<int:select_id>/', views.SetDateView.as_view()),
     path('test_email/', views.test_send_email),
     path('set_cancel/<int:select_id>', views.SetCancel.as_view()),
+    path('show_log/', views.ShowLogs.as_view()),
 ]
