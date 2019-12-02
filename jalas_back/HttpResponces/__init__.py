@@ -1,13 +1,13 @@
 from django.http import HttpResponse
 
 
-class HttpResponce500Error(HttpResponse):
+class HttpResponse500Error(HttpResponse):
     status_code = 500
 
 
-class HttpResponce404Error(HttpResponse):
+class HttpResponse404Error(HttpResponse):
     status_code = 404
 
 
-class HttpResponce400Error(HttpResponse):
+class HttpResponse400Error(HttpResponse):
     status_code = 400
