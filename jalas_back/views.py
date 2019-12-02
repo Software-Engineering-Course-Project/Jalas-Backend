@@ -13,7 +13,8 @@ from rest_framework.views import APIView
 from Jalas import settings
 from Jalas.settings import SITE_URL
 from data_access.accress_logic import GetMeetings, GetPolls, GetSelects, SetReservationTimes, SetMeeting
-from jalas_back.HttpResponces import HttpResponse400Error, HttpResponse404Error, HttpResponse500Error
+from jalas_back.HttpResponces import HttpResponse400Error, HttpResponse404Error, HttpResponse500Error, \
+    HttpResponse405Error
 from jalas_back.Serializer import SelectSerializer
 from jalas_back.models import Meeting, Poll, Select, ReservationTime
 
@@ -99,7 +100,7 @@ class SetRoomView(APIView):
             select = GetSelects.ById(select_id)
             meeting = select.poll.meeting
             if meeting.room:
-                return HttpResponse({
+                return HttpResponse405Error({
                             "This meeting already set room"
                         })
             while True:
@@ -168,6 +169,7 @@ class SetCancel(APIView):
             meeting = select.poll.meeting
             meeting.isCancel = True
             meeting.status = 4
+            meeting.room = None
             SetMeeting.save(meeting)
             SetReservationTimes.delete(meeting)
             meeting_json = serializers.serialize('json', [meeting])
