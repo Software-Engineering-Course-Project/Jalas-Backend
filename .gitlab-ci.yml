@@ -16,11 +16,17 @@ build:
     - ./manage.py makemigrations
     - ./manage.py migrate
 
-test:
+unitTest:
   image: python:3.7.2-stretch
-  stage: test
+  stage: unitTest
   script:
     - echo "Testing"
     - ./manage.py test
 
+integerationTest:
+  image: python:3.7.2-stretch
+  stage: integerationTest
+  script:
+    - echo "Testing"
+    - ./manage.py test
 
