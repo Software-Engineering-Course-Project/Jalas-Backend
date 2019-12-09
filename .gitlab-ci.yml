@@ -18,14 +18,14 @@ build:
     - ./manage.py migrate
 
 unitTest:
-  image: python:3.7.2-stretch
+  image: python:3.6.9-stretch
   stage: unitTest
   script:
     - echo "Testing"
     - ./manage.py test
 
 integerationTest:
-  image: python:3.7.2-stretch
+  image: python:3.6.9-stretch
   stage: integerationTest
   script:
     - echo "Testing"
