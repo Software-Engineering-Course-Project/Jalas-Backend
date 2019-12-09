@@ -1,0 +1,26 @@
+stages:
+  - build
+  - unitTest
+  - integerationTest
+
+before_script:
+  - python -V
+
+
+build:
+  image: python:3.6.9-stretch
+  stage: build
+  script:
+    - echo "Building"
+    - pip3 install -r requirements.txt
+    - ./manage.py makemigrations
+    - ./manage.py migrate
+
+test:
+  image: python:3.7.2-stretch
+  stage: test
+  script:
+    - echo "Testing"
+    - ./manage.py test
+
+
