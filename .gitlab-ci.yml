@@ -5,6 +5,7 @@ stages:
 
 before_script:
   - python -V
+  - pip install -r requirement.txt
 
 
 build:
