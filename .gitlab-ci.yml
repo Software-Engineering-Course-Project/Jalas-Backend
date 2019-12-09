@@ -12,7 +12,7 @@ build:
   stage: build
   script:
     - echo "Building"
-    - pip3 install -r requirements.txt
+    - pip3 install -r ./jalas/requirements.txt
     - ./manage.py makemigrations
     - ./manage.py migrate
 
