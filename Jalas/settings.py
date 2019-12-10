@@ -38,8 +38,12 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'jalas_back',
+    'reservation',
     'corsheaders',
     'data_access',
+    'logger',
+    'meeting',
+    'poll',
 ]
 
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
