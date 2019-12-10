@@ -15,4 +15,6 @@ urlpatterns = [
     path('test_email/', views.test_send_email),
     path('set_cancel/<int:select_id>', views.SetCancel.as_view()),
     path('show_log/', views.ShowLogs.as_view()),
+    path('create_poll/', views.CreatePoll.as_view()),
+    path('create_select/<int:poll_id>', views.CreateSelect.as_view()),
 ]

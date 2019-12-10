@@ -1,6 +1,8 @@
+import datetime
 import json
 
 import requests
+from django.contrib.auth.models import User
 from django.core import serializers
 from django.core.mail import send_mail
 from django.http import HttpResponse, JsonResponse
@@ -219,3 +221,35 @@ class ShowMeeting(APIView):
 def test_send_email(request):
     send_mail('salam', 'jalas', settings.DEFAULT_FROM_EMAIL, ['mohammadhadi.omidi92@gmail.com',], fail_silently=False)
     return HttpResponse("ssss")
+
+
+class CreatePoll(APIView):
+    def post(self, request):
+        title = request.GET['title']
+        text = request.GET['text']
+        user = User.objects.get(username='admin')
+        meeting = Meeting(title=title, text=text, owner=user)
+        meeting.save()
+        poll = Poll(title=title, text=text, meeting=meeting)
+        poll.save()
+        poll_json = serializers.serialize('json', [poll])
+        return HttpResponse(poll_json, content_type='application/json')
+
+class CreateSelect(APIView):
+    def post(self, request, poll_id):
+        try:
+            poll = Poll.objects.get(id=poll_id)
+            date = request.GET['date']
+            startTime = request.GET['start_time']
+            endTime = request.GET['end_time']
+            date = datetime.datetime.strptime(date, '%d-%m-%Y')
+            startTime = datetime.datetime.strptime(startTime, '%H:%M:%S')
+            endTime = datetime.datetime.strptime(endTime, '%H:%M:%S')
+            select = Select(date=date, startTime=startTime, endTime=endTime, poll=poll)
+            select.save()
+            select_json = SelectSerializer.makeSerial([select])
+            return HttpResponse(select_json, content_type='application/json')
+        except:
+            return HttpResponse404Error(
+                "This poll doesn\'t exist."
+            )
