@@ -18,7 +18,7 @@ from data_access.accress_logic import GetMeetings, GetPolls, GetSelects, SetRese
 from jalas_back.HttpResponces import HttpResponse400Error, HttpResponse404Error, HttpResponse500Error, \
     HttpResponse405Error
 from jalas_back.Serializer import SelectSerializer
-from jalas_back.models import Meeting, Poll, Select, ReservationTime
+from jalas_back.models import Meeting, Poll, Select, ReservationTime, MeetingParticipant
 
 
 def test(request):
@@ -228,10 +228,24 @@ class CreatePoll(APIView):
         title = request.GET['title']
         text = request.GET['text']
         user = User.objects.get(username='admin')
+        participants = request.GET['participants']
+        participants = json.loads(participants)
+        participants = participants['participants']
         meeting = Meeting(title=title, text=text, owner=user)
         meeting.save()
         poll = Poll(title=title, text=text, meeting=meeting)
         poll.save()
+        for participant in participants:
+            try:
+                user = User.objects.get(email=participant)
+                meetingParticipant = MeetingParticipant(meeting=meeting, participant=user)
+                meetingParticipant.save()
+            except:
+                user = User(username=participant, email=participant, password='')
+                user.save()
+                meetingParticipant = MeetingParticipant(meeting=meeting, participant=user)
+                meetingParticipant.save()
+
         poll_json = serializers.serialize('json', [poll])
         return HttpResponse(poll_json, content_type='application/json')
 
