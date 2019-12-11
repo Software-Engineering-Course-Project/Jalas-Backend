@@ -12,22 +12,32 @@ from rest_framework.views import APIView
 from jalas_back.HttpResponces import HttpResponse404Error
 from meeting.models import Meeting
 from poll.Serializer import SelectSerializer
-from poll.models import Poll, Select, MeetingParticipant
+from poll.models import Poll, Select, MeetingParticipant, SelectUser
 
 
 class PollsView(APIView):
     def get(self, request, meeting_id):
-        polls = Poll.objects.filter(meeting_id=meeting_id)
-        polls_json = serializers.serialize('json', polls)
-        return HttpResponse(polls_json, content_type='application/json')
+        try:
+            polls = Poll.objects.filter(meeting_id=meeting_id)
+            polls_json = serializers.serialize('json', polls)
+            return HttpResponse(polls_json, content_type='application/json')
+        except:
+            return HttpResponse404Error(
+                "This poll doesn\'t exist."
+            )
 
 
 class SelectsView(APIView):
 
     def get(self, request, poll_id):
-        selects = Select.objects.filter(poll_id=poll_id)
-        selects_json = SelectSerializer.makeSerial(selects)
-        return HttpResponse(selects_json, content_type='application/json')
+        try:
+            selects = Select.objects.filter(poll_id=poll_id)
+            selects_json = SelectSerializer.makeSerial(selects)
+            return HttpResponse(selects_json, content_type='application/json')
+        except:
+            return HttpResponse404Error(
+                "This poll doesn\'t exist."
+            )
 
 
 class PollView(APIView):
@@ -50,6 +60,8 @@ class CreatePoll(APIView):
         participants = request.GET['participants']
         participants = json.loads(participants)
         participants = participants['participants']
+        selects = request.GET['selects']
+        selects = json.loads(selects)
         meeting = Meeting(title=title, text=text, owner=user)
         meeting.save()
         poll = Poll(title=title, text=text, meeting=meeting)
@@ -65,24 +77,50 @@ class CreatePoll(APIView):
                 meetingParticipant = MeetingParticipant(meeting=meeting, participant=user)
                 meetingParticipant.save()
 
+        for select in selects:
+            date = datetime.datetime.strptime(select['date'], '%d-%m-%Y')
+            startTime = datetime.datetime.strptime(select['start_time'], '%H:%M')
+            endTime = datetime.datetime.strptime(select['end_time'], '%H:%M')
+            select = Select(date=date, startTime=startTime, endTime=endTime, poll=poll)
+            select.save()
         poll_json = serializers.serialize('json', [poll])
         return HttpResponse(poll_json, content_type='application/json')
 
 
-class CreateSelect(APIView):
+class VotingView(APIView):
+    def get(self, request, poll_id):
+        try:
+            selects = Select.objects.filter(poll_id=poll_id)
+            selects_json = SelectSerializer.makeSerial(selects)
+            return HttpResponse(selects_json, content_type='application/json')
+        except:
+            return HttpResponse404Error(
+                "This poll doesn\'t exist."
+            )
+
     def post(self, request, poll_id):
         try:
-            poll = Poll.objects.get(id=poll_id)
-            date = request.GET['date']
-            startTime = request.GET['start_time']
-            endTime = request.GET['end_time']
-            date = datetime.datetime.strptime(date, '%d-%m-%Y')
-            startTime = datetime.datetime.strptime(startTime, '%H:%M:%S')
-            endTime = datetime.datetime.strptime(endTime, '%H:%M:%S')
-            select = Select(date=date, startTime=startTime, endTime=endTime, poll=poll)
-            select.save()
-            select_json = SelectSerializer.makeSerial([select])
-            return HttpResponse(select_json, content_type='application/json')
+            selects = request.GET['selects']
+            selects = json.loads(selects)
+            user = User.objects.get(username='admin')
+            # TODO: create selcetUSer
+            for key in selects.keys():
+                try:
+                    select = Select.objects.get(id=int(key))
+                    try:
+                        selectUser = SelectUser.objects.get(select=select, user=user)
+                        selectUser.agreement = selects[key]
+                        selectUser.save()
+                    except:
+                        selectUser = SelectUser(select=select, user=user, agreement=selects[key])
+                        selectUser.save()
+                except:
+                    return  HttpResponse404Error(
+                        "One of the options not found."
+                    )
+            return HttpResponse(
+                "Submit successfully"
+            )
         except:
             return HttpResponse404Error(
                 "This poll doesn\'t exist."

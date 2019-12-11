@@ -8,8 +8,8 @@ from meeting.models import Meeting
 
 
 class MeetingParticipant(models.Model):
-    participant = models.ForeignKey(User, related_name='participateIn', null=True, blank=True, on_delete=models.SET_NULL)
-    meeting = models.ForeignKey(Meeting, related_name='participants', null=True, blank=True, on_delete=models.SET_NULL)
+    participant = models.ForeignKey(User, related_name='participateIn', on_delete=models.CASCADE, default=None)
+    meeting = models.ForeignKey(Meeting, related_name='participants', on_delete=models.CASCADE, default=None)
 
 
 class Poll(models.Model):
@@ -50,7 +50,7 @@ class SelectUser(models.Model):
         (1, 'خیر'),
         (2, 'بله')
     )
-    user = models.ForeignKey(User, related_name='voted', null=True, blank=True, on_delete=models.SET_NULL)
-    select = models.ForeignKey(Select, related_name='voted', null=True, blank=True, on_delete=models.SET_NULL)
+    user = models.ForeignKey(User, related_name='voted', default=None, on_delete=models.CASCADE, unique=True)
+    select = models.ForeignKey(Select, related_name='voted', default=None, on_delete=models.CASCADE, unique=True)
     agreement = models.IntegerField(verbose_name='نظر', null=True, choices=AGGREMENT_CHOICE)
 
