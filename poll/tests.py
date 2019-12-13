@@ -65,26 +65,29 @@ class PollViewTest(TestCase):
     def test_view_response_to_get_isvalid(self):
         response = self.client.get('/api/poll/poll/1')
         content = json.loads(response.content)
-        print(content)
+        # print(content)
         self.assertEqual(response.status_code, 200)
         self.assertEqual(len(content), 1)
         self.assertEqual(content[0]['pk'], 1)
 
 class CreatePollViewTest(TestCase):
 
-    def setUp(self):
-        self.content = {'title' : 'meeting 1', 'text' : '1', 'participants' : ['a'], 'selects':[{'date' : '2222-04-22', 'start_time':'12:09', 'end_time': '12:1'}]}
-
     def test_view_url_exists_at_desired_location(self):
-        response = self.client.post('/api/poll/create_poll', self.content)
+        content = {'title': 'meeting 1', 'text': '1', 'participants': ['a'],
+                   'selects': [{'date': '2222-04-22', 'start_time': '12:09', 'end_time': '12:1'}]}
+        self.client.login(username="test", password="test")
+        response = self.client.post('/api/poll/create_poll', content)
         self.assertEqual(response.status_code, 301)
 
     def test_view_action_isvalid(self):
-        response = self.client.post('/api/poll/create_poll', self.content)
+        content = {'title': 'meeting 1', 'text': '1', 'participants': ['a'],
+                   'selects': [{'date': '2222-04-22', 'start_time': '12:09:00', 'end_time': '12:01:00'}]}
+        self.client.login(username="test", password="test")
+        response = self.client.post('/api/poll/create_poll', content)
         option = Select.objects.filter(poll_id=1)
         print(SelectSerializer.makeSerial(option))
         # self.assertEqual(option, 200)
-        # self.assertEqual(len(content), 2)
+        # self.assertEqual(len(option), 2)
 
 class VoteViewTest(TestCase):
 
@@ -98,14 +101,16 @@ class VoteViewTest(TestCase):
     def setUp(self):
         self.content = {'selects' : {"1":1, "2":2}}
 
-    def test_view_url_exists_at_desired_location(self):
-        response = self.client.get('/api/poll/vote/5', self.content)
-        print(response.content)
-        self.assertEqual(response.status_code, 200)
-
+    # def test_view_url_exists_at_desired_location(self):
+    #     self.client.login(username="test", password="test")
+    #     response = self.client.post('/api/poll/vote/1', self.content)
+    #     print(response.content)
+    #     self.assertEqual(response.status_code, 200)
+    #
     # def test_view_action_isvalid(self):
-    #     response = self.client.post('/api/poll/create_poll', self.content)
-        # option = Select.objects.filter(poll_id=1)
-        # print(SelectSerializer.makeSerial(option))
-        # self.assertEqual(option, 200)
-        # self.assertEqual(len(content), 2)
+    #     self.client.login(username="test", password="test")
+    #     response = self.client.post('/api/poll/vote/1', self.content)
+    #     option = Select.objects.filter(poll_id=1)
+    #     print(SelectSerializer.makeSerial(option))
+    #     self.assertEqual(option, 200)
+    #     self.assertEqual(len(content), 2)
