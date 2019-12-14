@@ -86,12 +86,12 @@ class CreatePoll(APIView):
             select = Select(date=date, startTime=startTime, endTime=endTime, poll=poll)
             select.save()
         poll_json = serializers.serialize('json', [poll])
-        # send_mail(
-        #     subject=title,
-        #     message=link,
-        #     from_email=settings.EMAIL_HOST_USER,
-        #     recipient_list=participants
-        # )
+        send_mail(
+            subject=title,
+            message=link,
+            from_email=settings.EMAIL_HOST_USER,
+            recipient_list=participants
+        )
         print('kalka')
         try:
             return HttpResponse(poll_json, content_type='application/json')
@@ -116,7 +116,7 @@ class VotingView(APIView):
 
     def post(self, request, poll_id):
         try:
-            selects = request.data.get('selects')
+            selects = request.data.get('votes')
             name = request.data.get('name')
             user = User.objects.get(username='admin')
             # TODO: create selcetUSer
@@ -131,7 +131,6 @@ class VotingView(APIView):
                         selectUser = SelectUser(select=select, user=user, agreement=selects[key], name=name)
                         selectUser.save()
                 except Exception as e:
-                    print(e.__traceback__)
                     return  HttpResponse404Error(
                         "One of the options not found."
                     )

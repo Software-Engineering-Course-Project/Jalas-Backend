@@ -10,7 +10,7 @@ from rest_framework.views import APIView
 from Jalas import settings
 from data_access.accress_logic import SetReservationTimes
 from jalas_back.HttpResponces import HttpResponse500Error, HttpResponse404Error, HttpResponse405Error
-from poll.models import Select
+from poll.models import Select, MeetingParticipant
 
 
 class RoomsView(APIView):
@@ -84,7 +84,11 @@ class SetRoomView(APIView):
                         meeting.status = 2
                         SetReservationTimes.endTime(meeting.id)
                         meeting.save()
-                        self.sendMail([meeting.owner.email, ], meeting)
+                        to = []
+                        meetingParticipants = MeetingParticipant.objects.filter(meeting_id=meeting.id)
+                        for mp in meetingParticipants:
+                            to.append(mp.participant.email)
+                        self.sendMail([meeting.owner.email] + to, meeting)
                         meeting_json = serializers.serialize('json', [meeting])
                         return HttpResponse(meeting_json, content_type='application/json')
                     elif res.status_code == 400:
