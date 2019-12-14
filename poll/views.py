@@ -7,7 +7,9 @@ from django.http import HttpResponse
 from django.shortcuts import render
 
 # Create your views here.
-from rest_framework.views import APIView
+from django.utils.decorators import method_decorator
+from django.views.decorators.csrf import csrf_exempt
+from rest_framework.views import APIView, Response
 
 from jalas_back.HttpResponces import HttpResponse404Error
 from meeting.models import Meeting
@@ -52,6 +54,7 @@ class PollView(APIView):
             })
 
 
+@method_decorator(csrf_exempt, name='dispatch')
 class CreatePoll(APIView):
     def post(self, request):
         title = request.data.get('title')
@@ -81,7 +84,14 @@ class CreatePoll(APIView):
             select = Select(date=date, startTime=startTime, endTime=endTime, poll=poll)
             select.save()
         poll_json = serializers.serialize('json', [poll])
-        return HttpResponse(poll_json, content_type='application/json')
+        try:
+            return HttpResponse(poll_json, content_type='application/json')
+
+        except Exception as e:
+            print(e)
+            return HttpResponse404Error(
+                "This poll doesn\'t exist."
+            )
 
 
 class VotingView(APIView):
@@ -122,4 +132,40 @@ class VotingView(APIView):
         except:
             return HttpResponse404Error(
                 "This poll doesn\'t exist."
+            )
+
+
+class GetVoterName(APIView):
+    def get(self, request, poll_id):
+        try:
+            names = {}
+            poll = Poll.objects.get(id=poll_id)
+            poll_selects = poll.selects.all()
+            for index, select in enumerate(poll_selects):
+                selectUsers = SelectUser.objects.filter(select=select)
+                for s in selectUsers:
+                    if s.name in names.keys():
+                        if s.agreement == 2:
+                            names[s.name][index] = 1
+                    else:
+                        names[s.name] = [0 for i in range(len(poll_selects))]
+                        if s.agreement == 2:
+                            names[s.name][index] = 1
+            return HttpResponse(str(names))
+
+        except:
+            return HttpResponse404Error(
+                "This poll doesn\'t exist."
+            )
+
+
+class GetLastPoll(APIView):
+    def get(self, request):
+        try:
+            poll = Poll.objects.last()
+            poll = serializers.serialize('json', [poll])
+            return HttpResponse(poll, content_type='application/json')
+        except:
+            return HttpResponse404Error(
+                "No poll doesn\'t exist."
             )
