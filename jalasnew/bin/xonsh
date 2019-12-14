@@ -1,0 +1,3 @@
+#!/Users/navid/Documents/Courses/SoftwareEngineering/ComputerAssignment/3/jalas/jalasnew/bin/python3
+from xonsh.main import main
+main()
