@@ -50,7 +50,8 @@ class SelectUser(models.Model):
         (1, 'خیر'),
         (2, 'بله')
     )
-    user = models.ForeignKey(User, related_name='voted', default=None, on_delete=models.CASCADE, unique=True)
-    select = models.ForeignKey(Select, related_name='voted', default=None, on_delete=models.CASCADE, unique=True)
+    user = models.ForeignKey(User, related_name='voted', default=None, on_delete=models.CASCADE)
+    select = models.ForeignKey(Select, related_name='voted', default=None, on_delete=models.CASCADE)
     agreement = models.IntegerField(verbose_name='نظر', null=True, choices=AGGREMENT_CHOICE)
+    name = models.CharField(verbose_name='نام شرکت کننده', max_length=100, default=None)
 

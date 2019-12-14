@@ -102,19 +102,21 @@ class VotingView(APIView):
         try:
             selects = request.GET['selects']
             selects = json.loads(selects)
+            name = request.GET['name']
             user = User.objects.get(username='admin')
             # TODO: create selcetUSer
             for key in selects.keys():
                 try:
                     select = Select.objects.get(id=int(key))
                     try:
-                        selectUser = SelectUser.objects.get(select=select, user=user)
+                        selectUser = SelectUser.objects.get(select=select, user=user, name=name)
                         selectUser.agreement = selects[key]
                         selectUser.save()
                     except:
-                        selectUser = SelectUser(select=select, user=user, agreement=selects[key])
+                        selectUser = SelectUser(select=select, user=user, agreement=selects[key], name=name)
                         selectUser.save()
-                except:
+                except Exception as e:
+                    print(e.__traceback__)
                     return  HttpResponse404Error(
                         "One of the options not found."
                     )
