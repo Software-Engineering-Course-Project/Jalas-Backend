@@ -69,7 +69,7 @@ class CreatePoll(APIView):
         meeting.save()
         poll = Poll(title=title, text=text, meeting=meeting)
         poll.save()
-        link += poll.id
+        link += str(poll.id)
         for participant in participants:
             try:
                 user = User.objects.get(email=participant)
