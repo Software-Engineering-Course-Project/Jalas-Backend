@@ -116,24 +116,39 @@ class VotingView(APIView):
 
     def post(self, request, poll_id):
         try:
-            selects = request.data.get('votes')
+            selects = request.data.get('vote')
             name = request.data.get('name')
             user = User.objects.get(username='admin')
+            poll = Poll.objects.get(id=poll_id)
+            poll_selects = poll.selects.all()
             # TODO: create selcetUSer
-            for key in selects.keys():
-                try:
-                    select = Select.objects.get(id=int(key))
+            for index, val in enumerate(selects):
+                if val == 1:
                     try:
-                        selectUser = SelectUser.objects.get(select=select, user=user, name=name)
-                        selectUser.agreement = selects[key]
-                        selectUser.save()
-                    except:
-                        selectUser = SelectUser(select=select, user=user, agreement=selects[key], name=name)
-                        selectUser.save()
-                except Exception as e:
-                    return  HttpResponse404Error(
-                        "One of the options not found."
-                    )
+                        try:
+                            selectUser = SelectUser.objects.get(select=poll_selects[index], user=user, name=name)
+                            selectUser.agreement = 2
+                            selectUser.save()
+                        except:
+                            selectUser = SelectUser(select=poll_selects[index], user=user, agreement=2, name=name)
+                            selectUser.save()
+                    except Exception as e:
+                        return  HttpResponse404Error(
+                            "One of the options not found."
+                        )
+                if val == 0:
+                    try:
+                        try:
+                            selectUser = SelectUser.objects.get(select=poll_selects[index], user=user, name=name)
+                            selectUser.agreement = 1
+                            selectUser.save()
+                        except:
+                            selectUser = SelectUser(select=poll_selects[index], user=user, agreement=1, name=name)
+                            selectUser.save()
+                    except Exception as e:
+                        return  HttpResponse404Error(
+                            "One of the options not found."
+                        )
             return HttpResponse(
                 "Submit successfully"
             )
