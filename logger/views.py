@@ -17,9 +17,9 @@ class ShowLogs(APIView):
             reservedRoomNum += 1
             start = reserve.reservationStartTime.strftime("%s")
             end = reserve.reservationEndTime.strftime("%s")
-            end = int(end)
-            start = int(start)
-            overall_time += (end - start)
+            end = int(end) if end else None
+            start = int(start) if start else None
+            overall_time += (end - start) if (end != None and start != None) else 0
         overall_time = overall_time if overall_time > 0 else 0
         avg = overall_time / len(reservatoinTimes) if reservedRoomNum else 0
         canceledMeetings = Meeting.objects.filter(status=4)

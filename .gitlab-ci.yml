@@ -21,6 +21,9 @@ unitTest:
   image: python:3.6.9-stretch
   stage: unitTest
   script:
+    - pip install -r requirement.txt
+    - ./manage.py makemigrations
+    - ./manage.py migrate
     - echo "Testing"
     - ./manage.py test
 
@@ -28,6 +31,9 @@ integerationTest:
   image: python:3.6.9-stretch
   stage: integerationTest
   script:
+    - pip install -r requirement.txt
+    - ./manage.py makemigrations
+    - ./manage.py migrate
     - echo "Testing"
     - ./manage.py test
 
