@@ -3,6 +3,7 @@ import json
 
 from django.contrib.auth.models import User
 from django.core import serializers
+from django.core.mail import send_mail
 from django.http import HttpResponse
 from django.shortcuts import render
 
@@ -11,6 +12,7 @@ from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_exempt
 from rest_framework.views import APIView, Response
 
+from Jalas import settings
 from jalas_back.HttpResponces import HttpResponse404Error
 from meeting.models import Meeting
 from poll.Serializer import SelectSerializer
@@ -59,8 +61,9 @@ class CreatePoll(APIView):
     def post(self, request):
         title = request.data.get('title')
         text = request.data.get('text')
+        link = request.data.get('link', 'No link')
         user = User.objects.get(username='admin')
-        participants = request.data.get('participants')
+        participants = request.data.get('participants', [])
         selects = request.data.get('selects')
         meeting = Meeting(title=title, text=text, owner=user)
         meeting.save()
@@ -76,7 +79,6 @@ class CreatePoll(APIView):
                 user.save()
                 meetingParticipant = MeetingParticipant(meeting=meeting, participant=user)
                 meetingParticipant.save()
-
         for select in selects:
             date = datetime.datetime.strptime(select['date'], '%d-%m-%Y')
             startTime = datetime.datetime.strptime(select['start_time'], '%H:%M')
@@ -84,6 +86,13 @@ class CreatePoll(APIView):
             select = Select(date=date, startTime=startTime, endTime=endTime, poll=poll)
             select.save()
         poll_json = serializers.serialize('json', [poll])
+        # send_mail(
+        #     subject=title,
+        #     message=link,
+        #     from_email=settings.EMAIL_HOST_USER,
+        #     recipient_list=participants
+        # )
+        print('kalka')
         try:
             return HttpResponse(poll_json, content_type='application/json')
 
@@ -151,7 +160,13 @@ class GetVoterName(APIView):
                         names[s.name] = [0 for i in range(len(poll_selects))]
                         if s.agreement == 2:
                             names[s.name][index] = 1
-            return HttpResponse(str(names))
+            res = []
+            for name in names.keys():
+                ss = {}
+                ss['name'] = name
+                ss['votes'] = names[name]
+                res.append(ss)
+            return HttpResponse(str(res))
 
         except:
             return HttpResponse404Error(
