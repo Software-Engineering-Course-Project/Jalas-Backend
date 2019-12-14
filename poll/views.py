@@ -166,7 +166,7 @@ class GetVoterName(APIView):
                 ss['name'] = name
                 ss['votes'] = names[name]
                 res.append(ss)
-            return HttpResponse(str(res))
+            return HttpResponse(json.dumps(res), content_type='application/json')
 
         except:
             return HttpResponse404Error(
