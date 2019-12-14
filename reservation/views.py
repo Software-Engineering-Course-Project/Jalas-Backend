@@ -88,7 +88,7 @@ class SetRoomView(APIView):
                         meetingParticipants = MeetingParticipant.objects.filter(meeting_id=meeting.id)
                         for mp in meetingParticipants:
                             to.append(mp.participant.email)
-                        self.sendMail([meeting.owner.email] + to, meeting)
+                        self.sendMail([meeting.owner.email] + to, meeting, select.poll.id, select_id, room)
                         meeting_json = serializers.serialize('json', [meeting])
                         return HttpResponse(meeting_json, content_type='application/json')
                     elif res.status_code == 400:
@@ -108,9 +108,9 @@ class SetRoomView(APIView):
             })
 
     @staticmethod
-    def sendMail(to, meeting):
+    def sendMail(to, meeting, poll_id, select_id, room_number):
         subject = meeting.title
-        body = meeting.text
+        body = "http://localhost:3000/status/" + str(poll_id) + '/' + str(select_id) + '/' + str(room_number)
         from_email = settings.EMAIL_HOST_USER
         send_mail(subject, body, from_email, to, fail_silently=False)
 
