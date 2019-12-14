@@ -54,14 +54,11 @@ class PollView(APIView):
 
 class CreatePoll(APIView):
     def post(self, request):
-        title = request.GET['title']
-        text = request.GET['text']
+        title = request.data.get('title')
+        text = request.data.get('text')
         user = User.objects.get(username='admin')
-        participants = request.GET['participants']
-        participants = json.loads(participants)
-        participants = participants['participants']
-        selects = request.GET['selects']
-        selects = json.loads(selects)
+        participants = request.data.get('participants')
+        selects = request.data.get('selects')
         meeting = Meeting(title=title, text=text, owner=user)
         meeting.save()
         poll = Poll(title=title, text=text, meeting=meeting)
@@ -100,9 +97,8 @@ class VotingView(APIView):
 
     def post(self, request, poll_id):
         try:
-            selects = request.GET['selects']
-            selects = json.loads(selects)
-            name = request.GET['name']
+            selects = request.data.get('selects')
+            name = request.data.get('name')
             user = User.objects.get(username='admin')
             # TODO: create selcetUSer
             for key in selects.keys():
