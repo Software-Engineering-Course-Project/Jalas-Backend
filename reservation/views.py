@@ -110,7 +110,7 @@ class SetRoomView(APIView):
     @staticmethod
     def sendMail(to, meeting, poll_id, select_id, room_number):
         subject = meeting.title
-        body = "http://localhost:3000/status/" + str(poll_id) + '/' + str(select_id) + '/' + str(room_number)
+        body = "http://localhost:3000/meeting/" + str(poll_id) + '/' + str(select_id) + '/' + str(room_number)
         from_email = settings.EMAIL_HOST_USER
         send_mail(subject, body, from_email, to, fail_silently=False)
 
