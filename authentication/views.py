@@ -17,4 +17,8 @@ class LoginView(APIView):
                                 "password": password
                             }
                             )
-        return HttpResponse(res, content_type='application/json', status=res.status_code)
+        if res.status_code != 200:
+            return HttpResponse(
+                '{"info": "User not found"}', content_type='application/json', status=400
+            )
+        return HttpResponse(res, content_type='application/json')
