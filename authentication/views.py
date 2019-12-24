@@ -6,6 +6,7 @@ from django.shortcuts import render
 from rest_framework.views import APIView
 
 from Jalas.settings import SITE_URL
+from jalas_back.HttpResponces import HttpResponse404Error
 
 
 class LoginView(APIView):
@@ -18,7 +19,7 @@ class LoginView(APIView):
                             }
                             )
         if res.status_code != 200:
-            return HttpResponse(
-                '{"info": "User not found"}', content_type='application/json', status=400
+            return HttpResponse404Error(
+                "User not found"
             )
         return HttpResponse(res, content_type='application/json')
