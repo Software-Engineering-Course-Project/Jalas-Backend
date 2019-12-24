@@ -11,7 +11,7 @@ from Jalas.settings import SITE_URL
 class LoginView(APIView):
 
     def get(self, request, username, password):
-        res = requests.post(SITE_URL + 'auth/get_token/',
+        res = requests.post(SITE_URL + 'api/auth/get_token/',
                             json={
                                 "username": username,
                                 "password": password
