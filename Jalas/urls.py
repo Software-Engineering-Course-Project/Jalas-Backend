@@ -23,4 +23,5 @@ urlpatterns = [
     path('api/logger/', include('logger.urls')),
     path('api/poll/', include('poll.urls')),
     path('api/meeting/', include('meeting.urls')),
+    path('auth/', include('authentication.urls'))
 ]
