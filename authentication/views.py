@@ -17,4 +17,4 @@ class LoginView(APIView):
                                 "password": password
                             }
                             )
-        return HttpResponse(res, content_type='application/json')
+        return HttpResponse(res, content_type='application/json', status=res.status_code)
