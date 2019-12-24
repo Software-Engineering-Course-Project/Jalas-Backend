@@ -55,3 +55,7 @@ class SelectUser(models.Model):
     agreement = models.IntegerField(verbose_name='نظر', null=True, choices=AGGREMENT_CHOICE)
     name = models.CharField(verbose_name='نام شرکت کننده', max_length=100, default=None)
 
+class Comment(models.Model):
+    owner = models.ForeignKey(User, related_name='comments', default=None, on_delete=models.CASCADE)
+    text = models.TextField('متن')
+    poll = models.ForeignKey(Poll, related_name='comments', on_delete=models.CASCADE, default=None)

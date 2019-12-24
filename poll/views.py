@@ -16,13 +16,17 @@ from Jalas import settings
 from jalas_back.HttpResponces import HttpResponse404Error
 from meeting.models import Meeting
 from poll.Serializer import SelectSerializer
-from poll.models import Poll, Select, MeetingParticipant, SelectUser
+from poll.models import Poll, Select, MeetingParticipant, SelectUser, Comment
+from rest_framework.permissions import IsAuthenticated
 
 
 class PollsView(APIView):
-    def get(self, request, meeting_id):
+
+    permission_classes = (IsAuthenticated,)
+
+    def get(self, request):
         try:
-            polls = Poll.objects.filter(meeting_id=meeting_id)
+            polls = Poll.objects.filter(meeting__owner=request.user)
             polls_json = serializers.serialize('json', polls)
             return HttpResponse(polls_json, content_type='application/json')
         except:
@@ -32,6 +36,7 @@ class PollsView(APIView):
 
 
 class SelectsView(APIView):
+    permission_classes = (IsAuthenticated,)
 
     def get(self, request, poll_id):
         try:
@@ -45,6 +50,9 @@ class SelectsView(APIView):
 
 
 class PollView(APIView):
+
+    permission_classes = (IsAuthenticated,)
+
     def get(self, request, poll_id):
         try:
             poll = Poll.objects.get(id=poll_id)
@@ -56,19 +64,22 @@ class PollView(APIView):
             })
 
 
-@method_decorator(csrf_exempt, name='dispatch')
 class CreatePoll(APIView):
+
+    permission_classes = (IsAuthenticated,)
     def post(self, request):
         title = request.data.get('title')
         text = request.data.get('text')
         link = request.data.get('link', 'No link')
-        user = User.objects.get(username='admin')
+        user = request.user
         participants = request.data.get('participants', [])
         selects = request.data.get('selects')
         meeting = Meeting(title=title, text=text, owner=user)
         meeting.save()
         poll = Poll(title=title, text=text, meeting=meeting)
         poll.save()
+        meetingParticipant = MeetingParticipant(meeting=meeting, participant=user)
+        meetingParticipant.save()
         link += str(poll.id)
         for participant in participants:
             try:
@@ -93,7 +104,6 @@ class CreatePoll(APIView):
             from_email=settings.EMAIL_HOST_USER,
             recipient_list=participants
         )
-        print('kalka')
         try:
             return HttpResponse(poll_json, content_type='application/json')
 
@@ -105,6 +115,10 @@ class CreatePoll(APIView):
 
 
 class VotingView(APIView):
+
+
+    permission_classes = (IsAuthenticated,)
+
     def get(self, request, poll_id):
         try:
             selects = Select.objects.filter(poll_id=poll_id)
@@ -119,7 +133,7 @@ class VotingView(APIView):
         try:
             selects = request.data.get('vote')
             name = request.data.get('name')
-            user = User.objects.get(username='admin')
+            user = request.user
             poll = Poll.objects.get(id=poll_id)
             poll_selects = poll.selects.all()
             # TODO: create selcetUSer
@@ -160,6 +174,10 @@ class VotingView(APIView):
 
 
 class GetVoterName(APIView):
+
+
+    permission_classes = (IsAuthenticated,)
+
     def get(self, request, poll_id):
         try:
             names = {}
@@ -199,3 +217,29 @@ class GetLastPoll(APIView):
             return HttpResponse404Error(
                 "No poll doesn\'t exist."
             )
+
+class AddCommentView(APIView):
+
+    permission_classes = (IsAuthenticated, )
+
+    def get(self, request, poll_id, text):
+        try:
+            poll = Poll.objects.get(id=poll_id)
+            owner = request.user
+            comment = Comment(owner=owner, poll=poll, text=text)
+            comment.save()
+            comment_json = serializers.serialize('json', [comment])
+            return HttpResponse(comment_json, content_type='application/json')
+        except:
+            return HttpResponse404Error(
+                "No poll doesn\'t exist."
+            )
+
+
+class getCommentView(APIView):
+    permission_classes = (IsAuthenticated,)
+
+    def get(self, request, poll_id):
+        comments = Comment.objects.filter(poll_id=poll_id)
+        comments_json = serializers.serialize('json', [comments])
+        return HttpResponse(comments_json, content_type='application/json')
