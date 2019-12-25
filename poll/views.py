@@ -222,10 +222,17 @@ class AddCommentView(APIView):
 
     permission_classes = (IsAuthenticated, )
 
-    def get(self, request, poll_id, text):
+    def post(self, request, poll_id):
         try:
             poll = Poll.objects.get(id=poll_id)
+            meeting = poll.meeting
+            text = request.data.get('text')
             owner = request.user
+            if not MeetingParticipant.objects.filter(participant=owner, meeting=meeting):
+                return HttpResponse404Error(
+                    "You don\'t have permission to comment on this poll"
+                )
+
             comment = Comment(owner=owner, poll=poll, text=text)
             comment.save()
             comment_json = serializers.serialize('json', [comment])
@@ -243,3 +250,78 @@ class getCommentView(APIView):
         comments = Comment.objects.filter(poll_id=poll_id)
         comments_json = serializers.serialize('json', [comments])
         return HttpResponse(comments_json, content_type='application/json')
+
+
+class ModifiedPollView(APIView):
+
+    permission_classes = (IsAuthenticated,)
+
+    def post(self, request, poll_id):
+        try:
+           poll = Poll.objects.get(id=poll_id)
+        except:
+            return HttpResponse404Error(
+                "No poll doesn\'t exist."
+            )
+
+        title = request.data.get('title', None)
+        text = request.data.get('text', None)
+        link = request.data.get('link', 'No link')
+        user = request.user
+        new_participants = request.data.get('participants', [])
+        selects = request.data.get('selects')
+        meetingParticipants = MeetingParticipant.objects.filter(meeting=poll.meeting)
+        old_participants = []
+        for par in meetingParticipants:
+            old_participants.append(par.participant.email)
+        old_participants = set(old_participants)
+        new_participants = set(new_participants)
+        old_new = old_participants.difference(new_participants)
+        new_old = new_participants.difference(old_participants)
+        for par_email in old_new:
+            try:
+                par = User.objects.get(email=par_email)
+                meet_par = MeetingParticipant.objects.get(participant=user, meeting=poll.meeting)
+                meet_par.delete()
+            except:
+                pass
+        for par_email in new_old:
+            try:
+                user = User.objects.get(email=par_email)
+                meetingParticipant = MeetingParticipant(meeting=poll.meeting, participant=user)
+                meetingParticipant.save()
+            except:
+                user = User(username=par_email, email=par_email, password='')
+                user.save()
+                meetingParticipant = MeetingParticipant(meeting=poll.meeting, participant=user)
+                meetingParticipant.save()
+        old_selects = poll.selects.all()
+        new_selects = []
+        for select in selects:
+            date = datetime.datetime.strptime(select['date'], '%d-%m-%Y')
+            startTime = datetime.datetime.strptime(select['start_time'], '%H:%M')
+            endTime = datetime.datetime.strptime(select['end_time'], '%H:%M')
+            try:
+                old_select = Select.objects.get(date=date, startTime=startTime, endTime=endTime, poll=poll)
+                new_selects.append(old_select)
+            except:
+                new_select = Select(date=date, startTime=startTime, endTime=endTime, poll=poll)
+                new_select.save()
+                new_selects.append(new_select)
+        for old_select in old_selects:
+            flag = True
+            for new_select in new_selects:
+                if old_select.id == new_select.id:
+                    flag = False
+            if flag:
+                old_select.delete()
+
+        poll_json = serializers.serialize('json', [poll])
+        participants = old_participants.union(new_participants)
+        send_mail(
+            subject=title,
+            message='This poll was changed \n' + link,
+            from_email=settings.EMAIL_HOST_USER,
+            recipient_list=participants
+        )
+        return HttpResponse(poll_json, content_type='application/json')
