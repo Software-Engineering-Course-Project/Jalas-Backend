@@ -21,5 +21,5 @@ class CommentSerializer:
         comments_json = serializers.serialize('json', comments)
         comments_list = json.loads(comments_json)
         for index, val in enumerate(comments_list):
-            comments_list[index]['fields']['owner'] = comments[index].owner.username if comments[index].owner.username else 'Unknown'
+            comments_list[index]['fields']['username'] = comments[index].owner.username if comments[index].owner.username else 'Unknown'
         return json.dumps(comments_list)
