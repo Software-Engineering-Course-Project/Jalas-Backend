@@ -15,7 +15,7 @@ from rest_framework.views import APIView, Response
 from Jalas import settings
 from jalas_back.HttpResponces import HttpResponse404Error
 from meeting.models import Meeting
-from poll.Serializer import SelectSerializer
+from poll.Serializer import SelectSerializer, CommentSerializer
 from poll.models import Poll, Select, MeetingParticipant, SelectUser, Comment
 from rest_framework.permissions import IsAuthenticated
 
@@ -248,7 +248,7 @@ class GetCommentView(APIView):
 
     def get(self, request, poll_id):
         comments = Comment.objects.filter(poll_id=poll_id)
-        comments_json = serializers.serialize('json', [comments])
+        comments_json = CommentSerializer.makeSerial(comments)
         return HttpResponse(comments_json, content_type='application/json')
 
 
@@ -286,7 +286,7 @@ class ModifiedPollView(APIView):
         for par_email in old_new:
             try:
                 par = User.objects.get(email=par_email)
-                meet_par = MeetingParticipant.objects.get(participant=user, meeting=poll.meeting)
+                meet_par = MeetingParticipant.objects.get(participant=par, meeting=poll.meeting)
                 meet_par.delete()
             except:
                 pass
