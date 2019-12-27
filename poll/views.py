@@ -286,7 +286,7 @@ class ModifiedPollView(APIView):
         for par_email in old_new:
             try:
                 par = User.objects.get(email=par_email)
-                meet_par = MeetingParticipant.objects.get(participant=user, meeting=poll.meeting)
+                meet_par = MeetingParticipant.objects.get(participant=par, meeting=poll.meeting)
                 meet_par.delete()
             except:
                 pass
