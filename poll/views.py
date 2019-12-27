@@ -243,7 +243,7 @@ class AddCommentView(APIView):
             )
 
 
-class getCommentView(APIView):
+class GetCommentView(APIView):
     permission_classes = (IsAuthenticated,)
 
     def get(self, request, poll_id):
@@ -258,16 +258,21 @@ class ModifiedPollView(APIView):
 
     def post(self, request, poll_id):
         try:
-           poll = Poll.objects.get(id=poll_id)
+           poll = Poll.objects.get(id=poll_id, meeting__owner=request.user)
         except:
             return HttpResponse404Error(
-                "No poll doesn\'t exist."
+                "No poll doesn\'t exist or you can\'t access to modified this poll."
             )
-
         title = request.data.get('title', None)
         text = request.data.get('text', None)
+        poll.text = text
+        poll.title = title
+        poll.save()
+        meeting = poll.meeting
+        meeting.text = text
+        meeting.title = title
+        meeting.save()
         link = request.data.get('link', 'No link')
-        user = request.user
         new_participants = request.data.get('participants', [])
         selects = request.data.get('selects')
         meetingParticipants = MeetingParticipant.objects.filter(meeting=poll.meeting)
