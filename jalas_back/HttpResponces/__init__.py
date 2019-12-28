@@ -14,3 +14,6 @@ class HttpResponse400Error(HttpResponse):
 
 class HttpResponse405Error(HttpResponse):
     status_code = 405
+
+class HttpResponse407Error(HttpResponse):
+    status_code = 407

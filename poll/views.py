@@ -11,7 +11,7 @@ from django.shortcuts import render
 from rest_framework.views import APIView
 
 from Jalas import settings
-from jalas_back.HttpResponces import HttpResponse404Error
+from jalas_back.HttpResponces import HttpResponse404Error, HttpResponse407Error
 from meeting.models import Meeting
 from poll.Serializer import SelectSerializer, CommentSerializer
 from poll.models import Poll, Select, MeetingParticipant, SelectUser, Comment
@@ -54,6 +54,11 @@ class PollView(APIView):
     def get(self, request, poll_id):
         try:
             poll = Poll.objects.get(id=poll_id)
+            if poll.meeting.owner.username != request.user.username:
+                return HttpResponse407Error({
+                    'You don\'t have access to this point.'
+                })
+
             poll_json = serializers.serialize('json', [poll])
             return HttpResponse(poll_json, content_type='application/json')
         except:
