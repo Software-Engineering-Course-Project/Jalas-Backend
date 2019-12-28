@@ -23,3 +23,14 @@ class CommentSerializer:
         for index, val in enumerate(comments_list):
             comments_list[index]['fields']['username'] = comments[index].owner.username if comments[index].owner.username else 'Unknown'
         return json.dumps(comments_list)
+
+
+class ShowPollSerializer:
+
+    @staticmethod
+    def makeSerial(poll):
+        poll_json = serializers.serialize('json', [poll])
+        poll_list = json.loads(poll_json)
+        for index, val in enumerate(poll_list):
+            poll_list[index]['fields']['state'] = True if poll.meeting.status != 1 else False
+        return json.dumps(poll_list)
