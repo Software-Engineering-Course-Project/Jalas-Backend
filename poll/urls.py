@@ -15,4 +15,5 @@ urlpatterns = [
     path('get_comment/<int:poll_id>', views.GetCommentView.as_view()),
     path('can_vote/<int:poll_id>', views.CanVoteView.as_view()),
     path('get_participants/<int:poll_id>', views.GetParticipantsView.as_view()),
+    path('get_poll_title/<int:poll_id>', views.GetPollTitleView.as_view())
 ]
