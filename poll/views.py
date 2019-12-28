@@ -112,7 +112,7 @@ class CreatePoll(APIView):
                 meetingParticipant = MeetingParticipant(meeting=meeting, participant=user)
                 meetingParticipant.save()
         for select in selects:
-            date = datetime.datetime.strptime(select['date'], '%Y-%m-%d')
+            date = datetime.datetime.strptime(select['date'], '%d-%m-%Y')
             startTime = datetime.datetime.strptime(select['start_time'], '%H:%M')
             endTime = datetime.datetime.strptime(select['end_time'], '%H:%M')
             select = Select(date=date, startTime=startTime, endTime=endTime, poll=poll)
