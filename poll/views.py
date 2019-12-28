@@ -8,9 +8,7 @@ from django.http import HttpResponse
 from django.shortcuts import render
 
 # Create your views here.
-from django.utils.decorators import method_decorator
-from django.views.decorators.csrf import csrf_exempt
-from rest_framework.views import APIView, Response
+from rest_framework.views import APIView
 
 from Jalas import settings
 from jalas_back.HttpResponces import HttpResponse404Error
@@ -164,6 +162,13 @@ class VotingView(APIView):
                         return  HttpResponse404Error(
                             "One of the options not found."
                         )
+
+            send_mail(
+                subject=poll.title,
+                message='Your voted successfully',
+                from_email=settings.EMAIL_HOST_USER,
+                recipient_list=[user.email]
+            )
             return HttpResponse(
                 "Submit successfully"
             )
