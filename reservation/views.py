@@ -10,7 +10,7 @@ from rest_framework.views import APIView
 from Jalas import settings
 from data_access.accress_logic import SetReservationTimes
 from jalas_back.HttpResponces import HttpResponse500Error, HttpResponse404Error, HttpResponse405Error, \
-    HttpResponse407Error
+    HttpResponse999Error
 from poll.models import Select, MeetingParticipant
 
 
@@ -20,7 +20,7 @@ class RoomsView(APIView):
             select = Select.objects.get(id=select_id)
             meeting = select.poll.meeting
             if request.user.username != meeting.owner.username:
-                return HttpResponse407Error({
+                return HttpResponse999Error({
                     'You don\'t have access to this point.'
                 })
             try:

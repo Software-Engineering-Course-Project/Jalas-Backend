@@ -6,7 +6,7 @@ from django.shortcuts import render
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.views import APIView
 
-from jalas_back.HttpResponces import HttpResponse404Error, HttpResponse407Error
+from jalas_back.HttpResponces import HttpResponse404Error, HttpResponse999Error
 from meeting.models import Meeting
 from poll.models import Select, MeetingParticipant
 
@@ -32,7 +32,7 @@ class ShowMeeting(APIView):
             select = Select.objects.get(id=select_id)
             meeting = select.poll.meeting
             if request.user.username != meeting.owner.username:
-                return HttpResponse407Error({
+                return HttpResponse999Error({
                     'You don\'t have access to this point.'
                 })
             meeting_json = serializers.serialize('json', [meeting])
