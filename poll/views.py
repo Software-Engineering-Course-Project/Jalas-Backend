@@ -370,7 +370,7 @@ class CanVoteView(APIView):
             meetingParticipant = MeetingParticipant.objects.get(participant=request.user, meeting=poll.meeting)
         except:
             return HttpResponse(
-                    "{\"value\": 0}", content_type='application/json'
+                    "{\"value\": 2}", content_type='application/json'
                 )
 
 
