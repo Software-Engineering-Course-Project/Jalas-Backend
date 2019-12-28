@@ -155,49 +155,50 @@ class VotingView(APIView):
             name = request.data.get('name')
             user = request.user
             poll = Poll.objects.get(id=poll_id)
-            poll_selects = poll.selects.all()
-            # TODO: create selcetUSer
-            for index, val in enumerate(selects):
-                if val == 1:
-                    try:
-                        try:
-                            selectUser = SelectUser.objects.get(select=poll_selects[index], user=user, name=name)
-                            selectUser.agreement = 2
-                            selectUser.save()
-                        except:
-                            selectUser = SelectUser(select=poll_selects[index], user=user, agreement=2, name=name)
-                            selectUser.save()
-                    except Exception as e:
-                        return  HttpResponse404Error(
-                            "One of the options not found."
-                        )
-                if val == 0:
-                    try:
-                        try:
-                            selectUser = SelectUser.objects.get(select=poll_selects[index], user=user, name=name)
-                            selectUser.agreement = 1
-                            selectUser.save()
-                        except:
-                            selectUser = SelectUser(select=poll_selects[index], user=user, agreement=1, name=name)
-                            selectUser.save()
-                    except Exception as e:
-                        return  HttpResponse404Error(
-                            "One of the options not found."
-                        )
 
-            send_mail(
-                subject=poll.title,
-                message='Your voted successfully',
-                from_email=settings.EMAIL_HOST_USER,
-                recipient_list=[user.email]
-            )
-            return HttpResponse(
-                "Submit successfully"
-            )
         except:
             return HttpResponse404Error(
-                "This poll doesn\'t exist."
+            "This poll doesn\'t exist."
             )
+        poll_selects = poll.selects.all()
+        # TODO: create selcetUSer
+        for index, val in enumerate(selects):
+            if val == 1:
+                try:
+                    try:
+                        selectUser = SelectUser.objects.get(select=poll_selects[index], user=user, name=name)
+                        selectUser.agreement = 2
+                        selectUser.save()
+                    except:
+                        selectUser = SelectUser(select=poll_selects[index], user=user, agreement=2, name=name)
+                        selectUser.save()
+                except Exception as e:
+                    return  HttpResponse404Error(
+                        "One of the options not found."
+                    )
+            if val == 0:
+                try:
+                    try:
+                        selectUser = SelectUser.objects.get(select=poll_selects[index], user=user, name=name)
+                        selectUser.agreement = 1
+                        selectUser.save()
+                    except:
+                        selectUser = SelectUser(select=poll_selects[index], user=user, agreement=1, name=name)
+                        selectUser.save()
+                except Exception as e:
+                    return  HttpResponse404Error(
+                        "One of the options not found."
+                    )
+
+        send_mail(
+            subject=poll.title,
+            message='Your voted successfully',
+            from_email=settings.EMAIL_HOST_USER,
+            recipient_list=[user.email]
+        )
+        return HttpResponse(
+            "Submit successfully"
+        )
 
 
 class GetVoterName(APIView):
@@ -301,6 +302,7 @@ class ModifiedPollView(APIView):
         meeting.save()
         link = request.data.get('link', 'No link')
         new_participants = request.data.get('participants', [])
+        new_participants.append(request.user.email)
         selects = request.data.get('selects')
         meetingParticipants = MeetingParticipant.objects.filter(meeting=poll.meeting)
         old_participants = []
@@ -330,9 +332,9 @@ class ModifiedPollView(APIView):
         old_selects = poll.selects.all()
         new_selects = []
         for select in selects:
-            date = datetime.datetime.strptime(select['date'], '%d-%m-%Y')
-            startTime = datetime.datetime.strptime(select['start_time'], '%H:%M')
-            endTime = datetime.datetime.strptime(select['end_time'], '%H:%M')
+            date = datetime.datetime.strptime(select['date'], '%Y-%m-%d')
+            startTime = datetime.datetime.strptime(select['start_time'], '%H:%M:%S')
+            endTime = datetime.datetime.strptime(select['end_time'], '%H:%M:%S')
             try:
                 old_select = Select.objects.get(date=date, startTime=startTime, endTime=endTime, poll=poll)
                 new_selects.append(old_select)
@@ -364,11 +366,19 @@ class CanVoteView(APIView):
 
     def get(self, request, poll_id):
         try:
-            selectUser = SelectUser.objects.get(user=request.user, select__poll_id=poll_id)
+            poll = Poll.objects.get(id=poll_id)
+            meetingParticipant = MeetingParticipant.objects.get(participant=request.user, meeting=poll.meeting)
         except:
             return HttpResponse(
-                "{\"value\": 1}", content_type='application/json'
+                    "{\"value\": 2}", content_type='application/json'
+                )
+
+
+        selectUser = SelectUser.objects.filter(user=request.user, select__poll_id=poll_id)
+        if selectUser:
+            return HttpResponse(
+                "{\"value\": 0}", content_type='application/json'
             )
         return HttpResponse(
-                "{\"value\": 0}", content_type='application/json'
+                "{\"value\": 1}", content_type='application/json'
             )
