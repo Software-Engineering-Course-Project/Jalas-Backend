@@ -20,7 +20,8 @@ class MeetingsView(APIView):
         participateIn = user.participateIn.all()
         meetings = []
         for participate in participateIn:
-            meetings.append(participate.meeting)
+            if participate.meeting.status == 2:
+                meetings.append(participate.meeting)
         meetings_json = serializers.serialize('json', meetings)
         return HttpResponse(meetings_json, content_type='application/json')
 

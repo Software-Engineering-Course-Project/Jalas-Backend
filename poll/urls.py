@@ -13,4 +13,5 @@ urlpatterns = [
     path('add_comment/<int:poll_id>', views.AddCommentView.as_view()),
     path('modify/<int:poll_id>', views.ModifiedPollView.as_view()),
     path('get_comment/<int:poll_id>', views.GetCommentView.as_view()),
+    path('can_vote/<int:poll_id>', views.CanVoteView.as_view()),
 ]

@@ -335,3 +335,18 @@ class ModifiedPollView(APIView):
             recipient_list=participants
         )
         return HttpResponse(poll_json, content_type='application/json')
+
+class CanVoteView(APIView):
+
+    permission_classes = (IsAuthenticated,)
+
+    def get(self, request, poll_id):
+        try:
+            selectUser = SelectUser.objects.get(user=request.user, select__poll_id=poll_id)
+        except:
+            return HttpResponse(
+                "{\"value\": 1}", content_type='application/json'
+            )
+        return HttpResponse(
+                "{\"value\": 0}", content_type='application/json'
+            )
