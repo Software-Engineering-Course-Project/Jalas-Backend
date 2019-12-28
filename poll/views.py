@@ -66,6 +66,19 @@ class PollView(APIView):
                 'this poll doesn\'t exist.'
             })
 
+class GetPollTitleView(APIView):
+
+    def get(self, request, poll_id):
+        try:
+            poll = Poll.objects.get(id=poll_id)
+        except:
+            return HttpResponse404Error({
+                'this poll doesn\'t exist.'
+            })
+        return HttpResponse(
+            '{"title": "' + poll.title + '" }', content_type='application/json'
+        )
+
 class GetParticipantsView(APIView):
 
     permission_classes = (IsAuthenticated,)
