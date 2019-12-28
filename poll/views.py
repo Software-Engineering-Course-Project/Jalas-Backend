@@ -61,6 +61,28 @@ class PollView(APIView):
                 'this poll doesn\'t exist.'
             })
 
+class GetParticipantsView(APIView):
+
+    permission_classes = (IsAuthenticated,)
+
+    def get(self, request, poll_id):
+        try:
+            poll = Poll.objects.get(id=poll_id)
+            meeting = poll.meeting
+            meetingParticipants = MeetingParticipant.objects.filter(meeting=meeting)
+            participants = []
+            for mp in meetingParticipants:
+                if mp.participant.email != request.user.email:
+                    participants.append(mp.participant.email)
+            participants = {
+                'participants': participants
+            }
+            participants_json = json.dumps(participants)
+            return HttpResponse(participants_json, content_type='application/json')
+        except:
+            return HttpResponse404Error({
+                'this poll doesn\'t exist.'
+            })
 
 class CreatePoll(APIView):
 

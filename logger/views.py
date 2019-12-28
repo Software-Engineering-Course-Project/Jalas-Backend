@@ -4,7 +4,7 @@ from django.shortcuts import render
 # Create your views here.
 from rest_framework.views import APIView
 
-from logger.models import ReservationTime
+from logger.models import ReservationTime, Response
 from meeting.models import Meeting
 
 
@@ -24,8 +24,21 @@ class ShowLogs(APIView):
         avg = overall_time / len(reservatoinTimes) if reservedRoomNum else 0
         canceledMeetings = Meeting.objects.filter(status=4)
         canceledNumber = len(canceledMeetings)
+        avg_res_time = self.getAverageResponseTime()
+
         res = "Till now: <br> Average time duration for each reservation is " + str(avg) + ' sec '+\
             "<br> " + 'Canceled meeting number is ' + str(canceledNumber) +\
-            "<br>" + 'Reserved Room number is ' + str(reservedRoomNum)
+            "<br>" + 'Reserved Room number is ' + str(reservedRoomNum) +\
+            "<br>" + ('Average response time is %2.4f' % avg_res_time) +\
+            '<br>' + ()
         return HttpResponse(res)
 
+    def getAverageResponseTime(self):
+        res_times = Response.objects.all()
+        s = 0.0
+        for res_time in res_times:
+            s += res_time.duration
+        return s / len(res_times)
+
+    def get_throughput(self):
+        pass
