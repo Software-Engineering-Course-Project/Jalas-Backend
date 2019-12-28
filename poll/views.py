@@ -155,49 +155,50 @@ class VotingView(APIView):
             name = request.data.get('name')
             user = request.user
             poll = Poll.objects.get(id=poll_id)
-            poll_selects = poll.selects.all()
-            # TODO: create selcetUSer
-            for index, val in enumerate(selects):
-                if val == 1:
-                    try:
-                        try:
-                            selectUser = SelectUser.objects.get(select=poll_selects[index], user=user, name=name)
-                            selectUser.agreement = 2
-                            selectUser.save()
-                        except:
-                            selectUser = SelectUser(select=poll_selects[index], user=user, agreement=2, name=name)
-                            selectUser.save()
-                    except Exception as e:
-                        return  HttpResponse404Error(
-                            "One of the options not found."
-                        )
-                if val == 0:
-                    try:
-                        try:
-                            selectUser = SelectUser.objects.get(select=poll_selects[index], user=user, name=name)
-                            selectUser.agreement = 1
-                            selectUser.save()
-                        except:
-                            selectUser = SelectUser(select=poll_selects[index], user=user, agreement=1, name=name)
-                            selectUser.save()
-                    except Exception as e:
-                        return  HttpResponse404Error(
-                            "One of the options not found."
-                        )
 
-            send_mail(
-                subject=poll.title,
-                message='Your voted successfully',
-                from_email=settings.EMAIL_HOST_USER,
-                recipient_list=[user.email]
-            )
-            return HttpResponse(
-                "Submit successfully"
-            )
         except:
             return HttpResponse404Error(
-                "This poll doesn\'t exist."
+            "This poll doesn\'t exist."
             )
+        poll_selects = poll.selects.all()
+        # TODO: create selcetUSer
+        for index, val in enumerate(selects):
+            if val == 1:
+                try:
+                    try:
+                        selectUser = SelectUser.objects.get(select=poll_selects[index], user=user, name=name)
+                        selectUser.agreement = 2
+                        selectUser.save()
+                    except:
+                        selectUser = SelectUser(select=poll_selects[index], user=user, agreement=2, name=name)
+                        selectUser.save()
+                except Exception as e:
+                    return  HttpResponse404Error(
+                        "One of the options not found."
+                    )
+            if val == 0:
+                try:
+                    try:
+                        selectUser = SelectUser.objects.get(select=poll_selects[index], user=user, name=name)
+                        selectUser.agreement = 1
+                        selectUser.save()
+                    except:
+                        selectUser = SelectUser(select=poll_selects[index], user=user, agreement=1, name=name)
+                        selectUser.save()
+                except Exception as e:
+                    return  HttpResponse404Error(
+                        "One of the options not found."
+                    )
+
+        send_mail(
+            subject=poll.title,
+            message='Your voted successfully',
+            from_email=settings.EMAIL_HOST_USER,
+            recipient_list=[user.email]
+        )
+        return HttpResponse(
+            "Submit successfully"
+        )
 
 
 class GetVoterName(APIView):
@@ -373,12 +374,11 @@ class CanVoteView(APIView):
                 )
 
 
-        try:
-            selectUser = SelectUser.objects.get(user=request.user, select__poll_id=poll_id)
-        except:
+        selectUser = SelectUser.objects.filter(user=request.user, select__poll_id=poll_id)
+        if selectUser:
             return HttpResponse(
-                "{\"value\": 1}", content_type='application/json'
+                "{\"value\": 0}", content_type='application/json'
             )
         return HttpResponse(
-                "{\"value\": 0}", content_type='application/json'
+                "{\"value\": 1}", content_type='application/json'
             )
