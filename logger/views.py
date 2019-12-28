@@ -10,33 +10,36 @@ from rest_framework.views import APIView
 from logger.models import ReservationTime, Response, Throughput
 from meeting.models import Meeting
 
-# permission_classes = (IsAuthenticated,)
-
 class ShowLogs(APIView):
-    def get(self, request):
-        overall_time = 0
-        reservedRoomNum = 0
-        reservatoinTimes = ReservationTime.objects.all()
-        for reserve in reservatoinTimes:
-            reservedRoomNum += 1
-            start = reserve.reservationStartTime.strftime("%s")
-            end = reserve.reservationEndTime.strftime("%s")
-            end = int(end) if end else None
-            start = int(start) if start else None
-            overall_time += (end - start) if (end != None and start != None) else 0
-        overall_time = overall_time if overall_time > 0 else 0
-        avg = overall_time / len(reservatoinTimes) if reservedRoomNum else 0
-        canceledMeetings = Meeting.objects.filter(status=4)
-        canceledNumber = len(canceledMeetings)
-        avg_res_time = self.getAverageResponseTime()
-        throughput = self.get_throughput()
 
-        res = "Till now: <br> Average time duration for each reservation is " + str(avg) + ' sec '+\
-            "<br> " + 'Canceled meeting number is ' + str(canceledNumber) +\
-            "<br>" + 'Reserved Room number is ' + str(reservedRoomNum) +\
-            "<br>" + ('Average response time is %2.4f' % avg_res_time) +\
-            '<br>' + 'Throughput is ' + str(throughput)
-        return HttpResponse(res)
+    permission_classes = (IsAuthenticated,)
+
+    def get(self, request):
+        if request.user.username == 'admin':
+            overall_time = 0
+            reservedRoomNum = 0
+            reservatoinTimes = ReservationTime.objects.all()
+            for reserve in reservatoinTimes:
+                reservedRoomNum += 1
+                start = reserve.reservationStartTime.strftime("%s")
+                end = reserve.reservationEndTime.strftime("%s")
+                end = int(end) if end else None
+                start = int(start) if start else None
+                overall_time += (end - start) if (end != None and start != None) else 0
+            overall_time = overall_time if overall_time > 0 else 0
+            avg = overall_time / len(reservatoinTimes) if reservedRoomNum else 0
+            canceledMeetings = Meeting.objects.filter(status=4)
+            canceledNumber = len(canceledMeetings)
+            avg_res_time = self.getAverageResponseTime()
+            throughput = self.get_throughput()
+
+            res = "Till now: <br> Average time duration for each reservation is " + str(avg) + ' sec '+\
+                "<br> " + 'Canceled meeting number is ' + str(canceledNumber) +\
+                "<br>" + 'Reserved Room number is ' + str(reservedRoomNum) +\
+                "<br>" + ('Average response time is %2.4f' % avg_res_time) +\
+                '<br>' + 'Throughput is ' + str(throughput)
+            return HttpResponse(res)
+        return HttpResponse('You can\'t see logs.')
 
     def getAverageResponseTime(self):
         res_times = Response.objects.all()
