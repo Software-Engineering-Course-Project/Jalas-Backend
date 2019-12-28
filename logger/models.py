@@ -13,7 +13,7 @@ class ReservationTime(models.Model):
 
 
 class Throughput(models.Model):
-    create_date = models.DateField(default=timezone.now)
+    create_date = models.FloatField(default=0.0)
 
 
 class Response(models.Model):
