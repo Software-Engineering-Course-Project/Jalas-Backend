@@ -8,9 +8,7 @@ from django.http import HttpResponse
 from django.shortcuts import render
 
 # Create your views here.
-from django.utils.decorators import method_decorator
-from django.views.decorators.csrf import csrf_exempt
-from rest_framework.views import APIView, Response
+from rest_framework.views import APIView
 
 from Jalas import settings
 from jalas_back.HttpResponces import HttpResponse404Error
@@ -63,6 +61,28 @@ class PollView(APIView):
                 'this poll doesn\'t exist.'
             })
 
+class GetParticipantsView(APIView):
+
+    permission_classes = (IsAuthenticated,)
+
+    def get(self, request, poll_id):
+        try:
+            poll = Poll.objects.get(id=poll_id)
+            meeting = poll.meeting
+            meetingParticipants = MeetingParticipant.objects.filter(meeting=meeting)
+            participants = []
+            for mp in meetingParticipants:
+                if mp.participant.email != request.user.email:
+                    participants.append(mp.participant.email)
+            participants = {
+                'participants': participants
+            }
+            participants_json = json.dumps(participants)
+            return HttpResponse(participants_json, content_type='application/json')
+        except:
+            return HttpResponse404Error({
+                'this poll doesn\'t exist.'
+            })
 
 class CreatePoll(APIView):
 
@@ -164,6 +184,13 @@ class VotingView(APIView):
                         return  HttpResponse404Error(
                             "One of the options not found."
                         )
+
+            send_mail(
+                subject=poll.title,
+                message='Your voted successfully',
+                from_email=settings.EMAIL_HOST_USER,
+                recipient_list=[user.email]
+            )
             return HttpResponse(
                 "Submit successfully"
             )
@@ -330,3 +357,18 @@ class ModifiedPollView(APIView):
             recipient_list=participants
         )
         return HttpResponse(poll_json, content_type='application/json')
+
+class CanVoteView(APIView):
+
+    permission_classes = (IsAuthenticated,)
+
+    def get(self, request, poll_id):
+        try:
+            selectUser = SelectUser.objects.get(user=request.user, select__poll_id=poll_id)
+        except:
+            return HttpResponse(
+                "{\"value\": 1}", content_type='application/json'
+            )
+        return HttpResponse(
+                "{\"value\": 0}", content_type='application/json'
+            )
