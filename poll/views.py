@@ -365,6 +365,15 @@ class CanVoteView(APIView):
 
     def get(self, request, poll_id):
         try:
+            poll = Poll.objects.get(id=poll_id)
+            meetingParticipant = MeetingParticipant.objects.get(participant=request.user, meeting=poll.meeting)
+        except:
+            return HttpResponse(
+                    "{\"value\": 0}", content_type='application/json'
+                )
+
+
+        try:
             selectUser = SelectUser.objects.get(user=request.user, select__poll_id=poll_id)
         except:
             return HttpResponse(
