@@ -12,6 +12,7 @@ class SelectSerializer:
         for index, val in enumerate(selects_list):
             selects_list[index]['fields']['agree'] = selects[index].agree if selects[index].agree else 0
             selects_list[index]['fields']['disagree'] = selects[index].disagree if selects[index].disagree else 0
+            selects_list[index]['fields']['if_needed'] = selects[index].ifNeeded if selects[index].ifNeeded else 0
         return json.dumps(selects_list)
 
 class CommentSerializer:

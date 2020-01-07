@@ -14,7 +14,7 @@ from Jalas import settings
 from jalas_back.HttpResponces import HttpResponse404Error, HttpResponse999Error
 from meeting.models import Meeting
 from poll.Serializer import SelectSerializer, CommentSerializer, ShowPollSerializer
-from poll.models import Poll, Select, MeetingParticipant, SelectUser, Comment
+from poll.models import Poll, Select, MeetingParticipant, SelectUser
 from rest_framework.permissions import IsAuthenticated
 
 
@@ -24,7 +24,11 @@ class PollsView(APIView):
 
     def get(self, request):
         try:
-            polls = Poll.objects.filter(meeting__owner=request.user)
+            # polls = Poll.objects.filter(meeting__owner=request.user)
+            meetingParticipants = MeetingParticipant.objects.filter(participant=request.user)
+            polls = []
+            for mp in meetingParticipants:
+                polls.append(mp.meeting.polls.all()[0])
             polls_json = serializers.serialize('json', polls)
             return HttpResponse(polls_json, content_type='application/json')
         except:
@@ -183,7 +187,7 @@ class VotingView(APIView):
         for index, val in enumerate(selects):
             if val == 1:
                 try:
-                    try:
+                    try:  # yes
                         selectUser = SelectUser.objects.get(select=poll_selects[index], user=user, name=name)
                         selectUser.agreement = 2
                         selectUser.save()
@@ -194,7 +198,7 @@ class VotingView(APIView):
                     return  HttpResponse404Error(
                         "One of the options not found."
                     )
-            if val == 0:
+            elif val == 0:  # no
                 try:
                     try:
                         selectUser = SelectUser.objects.get(select=poll_selects[index], user=user, name=name)
@@ -207,12 +211,25 @@ class VotingView(APIView):
                     return  HttpResponse404Error(
                         "One of the options not found."
                     )
+            elif val == 2:  # if i need
+                try:
+                    try:
+                        selectUser = SelectUser.objects.get(select=poll_selects[index], user=user, name=name)
+                        selectUser.agreement = 3
+                        selectUser.save()
+                    except:
+                        selectUser = SelectUser(select=poll_selects[index], user=user, agreement=3, name=name)
+                        selectUser.save()
+                except Exception as e:
+                    return  HttpResponse404Error(
+                        "One of the options not found."
+                    )
 
         send_mail(
             subject=poll.title,
             message='Your voted successfully',
             from_email=settings.EMAIL_HOST_USER,
-            recipient_list=[user.email]
+            recipient_list=[user.email, poll.meeting.owner.email]
         )
         return HttpResponse(
             "Submit successfully"
@@ -235,10 +252,15 @@ class GetVoterName(APIView):
                     if s.name in names.keys():
                         if s.agreement == 2:
                             names[s.name][index] = 1
+                        elif s.agreement == 3:
+                            names[s.name][index] = 2
+
                     else:
                         names[s.name] = [0 for i in range(len(poll_selects))]
                         if s.agreement == 2:
                             names[s.name][index] = 1
+                        if s.agreement == 3:
+                            names[s.name][index] = 2
             res = []
             for name in names.keys():
                 ss = {}
@@ -263,40 +285,6 @@ class GetLastPoll(APIView):
             return HttpResponse404Error(
                 "No poll doesn\'t exist."
             )
-
-class AddCommentView(APIView):
-
-    permission_classes = (IsAuthenticated, )
-
-    def post(self, request, poll_id):
-        try:
-            poll = Poll.objects.get(id=poll_id)
-            meeting = poll.meeting
-            text = request.data.get('text')
-            owner = request.user
-            if not MeetingParticipant.objects.filter(participant=owner, meeting=meeting):
-                return HttpResponse404Error(
-                    "You don\'t have permission to comment on this poll"
-                )
-
-            comment = Comment(owner=owner, poll=poll, text=text)
-            comment.save()
-            comment_json = serializers.serialize('json', [comment])
-            return HttpResponse(comment_json, content_type='application/json')
-        except:
-            return HttpResponse404Error(
-                "No poll doesn\'t exist."
-            )
-
-
-class GetCommentView(APIView):
-    permission_classes = (IsAuthenticated,)
-
-    def get(self, request, poll_id):
-        comments = Comment.objects.filter(poll_id=poll_id)
-        comments_json = CommentSerializer.makeSerial(comments)
-        return HttpResponse(comments_json, content_type='application/json')
-
 
 class ModifiedPollView(APIView):
 

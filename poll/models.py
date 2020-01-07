@@ -40,22 +40,27 @@ class Select(models.Model):
                 count += 1
         return count
 
+    @property
+    def getIfNeededNumber(self):
+        count = 0
+        for vote in self.voted.all():
+            if vote.agreement == 3:
+                count += 1
+        return count
+
     agree = getAgreeNumber
     disagree = getDisagreeNumber
+    ifNeeded = getIfNeededNumber
 
 
 
 class SelectUser(models.Model):
     AGGREMENT_CHOICE = (
         (1, 'خیر'),
-        (2, 'بله')
+        (2, 'بله'),
+        (3, 'اگر مجبور بودم می‌آیم')
     )
     user = models.ForeignKey(User, related_name='voted', default=None, on_delete=models.CASCADE)
     select = models.ForeignKey(Select, related_name='voted', default=None, on_delete=models.CASCADE)
     agreement = models.IntegerField(verbose_name='نظر', null=True, choices=AGGREMENT_CHOICE)
     name = models.CharField(verbose_name='نام شرکت کننده', max_length=100, default=None)
-
-class Comment(models.Model):
-    owner = models.ForeignKey(User, related_name='comments', default=None, on_delete=models.CASCADE)
-    text = models.TextField('متن')
-    poll = models.ForeignKey(Poll, related_name='comments', on_delete=models.CASCADE, default=None)

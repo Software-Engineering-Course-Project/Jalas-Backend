@@ -23,5 +23,6 @@ urlpatterns = [
     path('api/logger/', include('logger.urls')),
     path('api/poll/', include('poll.urls')),
     path('api/meeting/', include('meeting.urls')),
-    path('api/auth/', include('authentication.urls'))
+    path('api/auth/', include('authentication.urls')),
+    path('api/comment/', include('comment.urls')),
 ]
