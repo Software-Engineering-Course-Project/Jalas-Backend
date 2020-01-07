@@ -89,3 +89,27 @@ class DeleteCommentView(APIView):
         return HttpResponse(
             'Comment deleted successfully'
         )
+
+
+class EditCommentView(APIView):
+
+    permission_classes = (IsAuthenticated, )
+
+    def post(self, request, comment_id):
+        try:
+            comment = Comment.objects.get(id=comment_id)
+        except:
+            return HttpResponse404Error(
+                "No comment doesn\'t exist."
+            )
+        if request.user != comment.owner:
+            return HttpResponse404Error(
+                "You don\'t have permission to comment on this poll"
+            )
+        text = request.data.get('text')
+        comment.text = text
+        comment.save()
+        comments_json = CommentSerializer.makeSerial([comment])
+        return HttpResponse(
+            comments_json, content_type='application/json'
+        )
