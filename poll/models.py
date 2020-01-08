@@ -5,6 +5,7 @@ from django.db import models
 from django.utils import timezone
 
 from meeting.models import Meeting
+from poll.emails import send_email_remove_option
 
 
 class MeetingParticipant(models.Model):
@@ -13,9 +14,16 @@ class MeetingParticipant(models.Model):
 
 
 class Poll(models.Model):
+    POLL_STATUS = (
+        (1, 'open'),
+        (2, 'canceled'),
+    )
+
     title = models.CharField('عنوان', max_length=100)
     text = models.TextField('متن')
     meeting = models.ForeignKey(Meeting, related_name='polls', on_delete=models.CASCADE)
+    date_close = models.DateField(verbose_name='تاریخ', default=timezone.now, null=True)
+    status = models.IntegerField('وضعیت رای‌گیری', choices=POLL_STATUS, default=1)
 
 
 class Select(models.Model):
@@ -52,7 +60,12 @@ class Select(models.Model):
     disagree = getDisagreeNumber
     ifNeeded = getIfNeededNumber
 
-
+    def delete_me(self, user, link, title):
+        voteds = self.voted.all()
+        participants = []
+        for vote in voteds:
+            participants.append(vote.user.email)
+        send_email_remove_option()
 
 class SelectUser(models.Model):
     AGGREMENT_CHOICE = (

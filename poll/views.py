@@ -14,6 +14,7 @@ from Jalas import settings
 from jalas_back.HttpResponces import HttpResponse404Error, HttpResponse999Error
 from meeting.models import Meeting
 from poll.Serializer import SelectSerializer, CommentSerializer, ShowPollSerializer
+from poll.emails import sned_email_arrange_meeting
 from poll.models import Poll, Select, MeetingParticipant, SelectUser
 from rest_framework.permissions import IsAuthenticated
 
@@ -140,12 +141,7 @@ class CreatePoll(APIView):
             select = Select(date=date, startTime=startTime, endTime=endTime, poll=poll)
             select.save()
         poll_json = serializers.serialize('json', [poll])
-        send_mail(
-            subject=title,
-            message=link,
-            from_email=settings.EMAIL_HOST_USER,
-            recipient_list=participants
-        )
+        sned_email_arrange_meeting(user, title, link, participants)
         try:
             return HttpResponse(poll_json, content_type='application/json')
 
