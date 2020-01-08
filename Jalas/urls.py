@@ -25,4 +25,5 @@ urlpatterns = [
     path('api/meeting/', include('meeting.urls')),
     path('api/auth/', include('authentication.urls')),
     path('api/comment/', include('comment.urls')),
+    path('api/config/', include('configurations.urls'))
 ]
