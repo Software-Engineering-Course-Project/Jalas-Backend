@@ -155,7 +155,6 @@ class CreatePoll(APIView):
 
 class VotingView(APIView):
 
-
     permission_classes = (IsAuthenticated,)
 
     def get(self, request, poll_id):
@@ -177,7 +176,7 @@ class VotingView(APIView):
 
         except:
             return HttpResponse404Error(
-            "This poll doesn\'t exist."
+                "This poll doesn\'t exist."
             )
         poll_selects = poll.selects.all()
         # TODO: create selcetUSer
@@ -351,3 +350,20 @@ class CanVoteView(APIView):
         return HttpResponse(
                 "{\"value\": 1}", content_type='application/json'
             )
+
+
+class ClosePollView(APIView):
+
+    permission_classes = (IsAuthenticated, )
+
+    def get(self, request, poll_id):
+        try:
+            poll = Poll.objects.get(id=poll_id)
+        except:
+            return HttpResponse404Error(
+                "No poll doesn\'t exist."
+            )
+        poll.status = 2
+        poll.save()
+        poll_json = serializers.serialize('json', [poll])
+        return HttpResponse(poll_json, content_type='application/json')

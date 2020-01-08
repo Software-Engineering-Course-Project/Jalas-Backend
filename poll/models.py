@@ -68,6 +68,7 @@ class Select(models.Model):
         send_email_remove_option(user, title, link, participants)
         self.delete()
 
+
 class SelectUser(models.Model):
     AGGREMENT_CHOICE = (
         (1, 'خیر'),
