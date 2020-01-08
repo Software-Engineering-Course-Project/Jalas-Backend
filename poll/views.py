@@ -15,7 +15,7 @@ from jalas_back.HttpResponces import HttpResponse404Error, HttpResponse999Error
 from meeting.models import Meeting
 from poll.Serializer import SelectSerializer, CommentSerializer, ShowPollSerializer
 from poll.emails import send_email_arrange_meeting, send_email_add_option, send_email_add_participant, \
-    send_email_new_vote
+    send_email_new_vote, send_email_close_poll
 from poll.models import Poll, Select, MeetingParticipant, SelectUser
 from rest_framework.permissions import IsAuthenticated
 
@@ -365,5 +365,6 @@ class ClosePollView(APIView):
             )
         poll.status = 2
         poll.save()
+        send_email_close_poll(request.user, poll)
         poll_json = serializers.serialize('json', [poll])
         return HttpResponse(poll_json, content_type='application/json')
