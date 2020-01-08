@@ -3,7 +3,7 @@ from django.core.mail import send_mail
 from Jalas import settings
 
 
-def sned_email_arrange_meeting(user, title, link, participants):
+def send_email_arrange_meeting(user, title, link, participants):
     if user.configuration.arrange_meeting and participants:
         try:
             send_mail(
@@ -55,14 +55,14 @@ def send_email_remove_option(user, title, link, participants):
             print('There are some problem. Plz, check your network connection')
 
 
-def send_email_new_vote(user, title, link, participants):
-    if user.configuration.remove_option and participants:
+def send_email_new_vote(user, poll, to):
+    if user.configuration.remove_option and to:
         try:
             send_mail(
-                subject=title,
-                message='You voted to this poll: \n' + link,
+                subject=poll.title,
+                message='Your voted successfully',
                 from_email=settings.EMAIL_HOST_USER,
-                recipient_list=participants
+                recipient_list=[user.email, poll.meeting.owner.email]
             )
         except:
             print('There are some problem. Plz, Check your network connection')

@@ -14,7 +14,8 @@ from Jalas import settings
 from jalas_back.HttpResponces import HttpResponse404Error, HttpResponse999Error
 from meeting.models import Meeting
 from poll.Serializer import SelectSerializer, CommentSerializer, ShowPollSerializer
-from poll.emails import sned_email_arrange_meeting
+from poll.emails import send_email_arrange_meeting, send_email_add_option, send_email_add_participant, \
+    send_email_new_vote
 from poll.models import Poll, Select, MeetingParticipant, SelectUser
 from rest_framework.permissions import IsAuthenticated
 
@@ -141,7 +142,7 @@ class CreatePoll(APIView):
             select = Select(date=date, startTime=startTime, endTime=endTime, poll=poll)
             select.save()
         poll_json = serializers.serialize('json', [poll])
-        sned_email_arrange_meeting(user, title, link, participants)
+        send_email_arrange_meeting(user, title, link, participants)
         try:
             return HttpResponse(poll_json, content_type='application/json')
 
@@ -193,13 +194,7 @@ class VotingView(APIView):
                 return  HttpResponse404Error(
                     "One of the options not found."
                 )
-
-        send_mail(
-            subject=poll.title,
-            message='Your voted successfully',
-            from_email=settings.EMAIL_HOST_USER,
-            recipient_list=[user.email, poll.meeting.owner.email]
-        )
+        send_email_new_vote(user, poll, user.email)
         return HttpResponse(
             "Submit successfully"
         )
@@ -306,6 +301,7 @@ class ModifiedPollView(APIView):
                 meetingParticipant.save()
         old_selects = poll.selects.all()
         new_selects = []
+        has_new_select = False
         for select in selects:
             date = datetime.datetime.strptime(select['date'], '%Y-%m-%d')
             startTime = datetime.datetime.strptime(select['start_time'], '%H:%M:%S')
@@ -313,6 +309,7 @@ class ModifiedPollView(APIView):
             try:
                 old_select = Select.objects.get(date=date, startTime=startTime, endTime=endTime, poll=poll)
                 new_selects.append(old_select)
+                has_new_select = True
             except:
                 new_select = Select(date=date, startTime=startTime, endTime=endTime, poll=poll)
                 new_select.save()
@@ -323,16 +320,13 @@ class ModifiedPollView(APIView):
                 if old_select.id == new_select.id:
                     flag = False
             if flag:
-                old_select.delete()
-
+                old_select.delete_me(request.user, title, link)
         poll_json = serializers.serialize('json', [poll])
         participants = old_participants.union(new_participants)
-        send_mail(
-            subject=title,
-            message='This poll was changed \n' + link,
-            from_email=settings.EMAIL_HOST_USER,
-            recipient_list=participants
-        )
+        if has_new_select:
+            send_email_add_option(request.user, title, link, participants)
+        if new_old:
+            send_email_add_participant(request.user, title, link, participants)
         return HttpResponse(poll_json, content_type='application/json')
 
 class CanVoteView(APIView):

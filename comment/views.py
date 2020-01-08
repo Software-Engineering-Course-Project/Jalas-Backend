@@ -47,7 +47,7 @@ class GetCommentView(APIView):
             comments_replies.append(comment)
             reps = comment.get_replies
             comments_replies += reps
-        comments_json = CommentSerializer.makeSerial(comments_replies)
+        comments_json = CommentSerializer.makeSerial(comments_replies, user=request.user)
         return HttpResponse(comments_json, content_type='application/json')
 
 

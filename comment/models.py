@@ -27,3 +27,10 @@ class Comment(models.Model):
         if poll:
             return poll
         return self.parent.get_poll
+
+    def can_delete(self, user):
+        return (user == self.get_poll.meeting.owner) or (user == self.owner)
+
+
+    def can_edit(self, user):
+        return (user == self.owner)

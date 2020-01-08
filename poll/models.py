@@ -65,7 +65,8 @@ class Select(models.Model):
         participants = []
         for vote in voteds:
             participants.append(vote.user.email)
-        send_email_remove_option()
+        send_email_remove_option(user, title, link, participants)
+        self.delete()
 
 class SelectUser(models.Model):
     AGGREMENT_CHOICE = (

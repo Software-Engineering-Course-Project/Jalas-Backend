@@ -18,11 +18,13 @@ class SelectSerializer:
 class CommentSerializer:
 
     @staticmethod
-    def makeSerial(comments):
+    def makeSerial(comments, user):
         comments_json = serializers.serialize('json', comments)
         comments_list = json.loads(comments_json)
         for index, val in enumerate(comments_list):
             comments_list[index]['fields']['username'] = comments[index].owner.username if comments[index].owner.username else 'Unknown'
+            comments_list[index]['fields']['can_edit'] = comments[index].can_edit(user)
+            comments_list[index]['fields']['can_delete'] = comments[index].can_delete(user)
         return json.dumps(comments_list)
 
 
