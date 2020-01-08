@@ -61,7 +61,7 @@ class AddReplyView(APIView):
             return HttpResponse404Error(
                 "You don\'t have permission to comment on this poll"
             )
-        poll = comment.poll
+        poll = comment.get_poll
         meeting = poll.meeting
         text = request.data.get('text')
         owner = request.user

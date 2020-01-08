@@ -20,3 +20,10 @@ class Comment(models.Model):
             replies_list.append(rep)
             replies_list += rep.get_replies
         return replies_list
+
+    @property
+    def get_poll(self):
+        poll = self.poll
+        if poll:
+            return poll
+        return self.parent.get_poll
