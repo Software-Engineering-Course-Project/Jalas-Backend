@@ -1,7 +1,6 @@
 import datetime
 import json
 
-from django.contrib.auth.models import User
 from django.core import serializers
 from django.core.mail import send_mail
 from django.http import HttpResponse
@@ -11,6 +10,7 @@ from django.shortcuts import render
 from rest_framework.views import APIView
 
 from Jalas import settings
+from authentication.models import User
 from jalas_back.HttpResponces import HttpResponse404Error, HttpResponse999Error
 from meeting.models import Meeting
 from poll.Serializer import SelectSerializer, CommentSerializer, ShowPollSerializer
@@ -125,22 +125,8 @@ class CreatePoll(APIView):
         meetingParticipant = MeetingParticipant(meeting=meeting, participant=user)
         meetingParticipant.save()
         link += str(poll.id)
-        for participant in participants:
-            try:
-                user = User.objects.get(email=participant)
-                meetingParticipant = MeetingParticipant(meeting=meeting, participant=user)
-                meetingParticipant.save()
-            except:
-                user = User(username=participant, email=participant, password='')
-                user.save()
-                meetingParticipant = MeetingParticipant(meeting=meeting, participant=user)
-                meetingParticipant.save()
-        for select in selects:
-            date = datetime.datetime.strptime(select['date'], '%d-%m-%Y')
-            startTime = datetime.datetime.strptime(select['start_time'], '%H:%M')
-            endTime = datetime.datetime.strptime(select['end_time'], '%H:%M')
-            select = Select(date=date, startTime=startTime, endTime=endTime, poll=poll)
-            select.save()
+        self.create_participants(meeting, participants, user)
+        self.createOptions(poll, selects)
         poll_json = serializers.serialize('json', [poll])
         send_email_arrange_meeting(user, title, link, participants)
         try:
@@ -151,6 +137,26 @@ class CreatePoll(APIView):
             return HttpResponse404Error(
                 "This poll doesn\'t exist."
             )
+
+    def createOptions(self, poll, selects):
+        for select in selects:
+            date = datetime.datetime.strptime(select['date'], '%d-%m-%Y')
+            startTime = datetime.datetime.strptime(select['start_time'], '%H:%M')
+            endTime = datetime.datetime.strptime(select['end_time'], '%H:%M')
+            select = Select(date=date, startTime=startTime, endTime=endTime, poll=poll)
+            select.save()
+
+    def create_participants(self, meeting, participants, user):
+        for participant in participants:
+            try:
+                user = User.objects.get(email=participant)
+                meetingParticipant = MeetingParticipant(meeting=meeting, participant=user)
+                meetingParticipant.save()
+            except:
+                user = User(username=participant, email=participant, password='')
+                user.save()
+                meetingParticipant = MeetingParticipant(meeting=meeting, participant=user)
+                meetingParticipant.save()
 
 
 class VotingView(APIView):
@@ -179,7 +185,6 @@ class VotingView(APIView):
                 "This poll doesn\'t exist."
             )
         poll_selects = poll.selects.all()
-        # TODO: create selcetUSer
         for index, val in enumerate(selects):
             try:
                 try:
@@ -365,6 +370,7 @@ class ClosePollView(APIView):
             )
         poll.status = 2
         poll.save()
-        send_email_close_poll(request.user, poll)
+        meetPars = MeetingParticipant.objects.filter(meeting=poll.meeting)
+        send_email_close_poll(request.user, poll, meetPars)
         poll_json = serializers.serialize('json', [poll])
         return HttpResponse(poll_json, content_type='application/json')

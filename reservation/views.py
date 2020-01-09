@@ -161,7 +161,8 @@ class SetCancel(APIView):
             meeting.status = 4
             meeting.room = None
             meeting.save()
-            send_email_cancel_meeting(request.user, meeting)
+            meetPars = MeetingParticipant.objects.filter(meeting=meeting)
+            send_email_cancel_meeting(request.user, meeting, meetPars)
             SetReservationTimes.delete(meeting)
             meeting_json = serializers.serialize('json', [meeting])
             return HttpResponse(meeting_json, content_type='application/json')
