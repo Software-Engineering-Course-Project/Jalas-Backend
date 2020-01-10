@@ -122,7 +122,7 @@ class CreatePoll(APIView):
         text = request.data.get('text')
         link = request.data.get('link', 'No link')
         user = request.user
-        close_date = request.data.get('closeDate', '')
+        close_date = request.data.get('closeDate', '2424-2-2')
         participants = request.data.get('participants', [])
         selects = request.data.get('selects')
         meeting = Meeting(title=title, text=text, owner=user)
@@ -298,7 +298,7 @@ class ModifiedPollView(APIView):
             )
         title = request.data.get('title', None)
         text = request.data.get('text', None)
-        close_date = request.data.get('closeDate', '')
+        close_date = request.data.get('closeDate', '2424-2-2')
         poll.text = text
         poll.title = title
         if close_date:
