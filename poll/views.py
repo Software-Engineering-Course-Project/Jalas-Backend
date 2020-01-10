@@ -165,6 +165,11 @@ class VotingView(APIView):
 
     def get(self, request, poll_id):
         try:
+            poll = Poll.objects.get(id=poll_id)
+            if poll.status:
+                return HttpResponse404Error(
+                    "This poll was closed."
+                )
             selects = Select.objects.filter(poll_id=poll_id)
             selects_json = SelectSerializer.makeSerial(selects)
             return HttpResponse(selects_json, content_type='application/json')
@@ -345,7 +350,6 @@ class CanVoteView(APIView):
             return HttpResponse(
                     "{\"value\": 2}", content_type='application/json'
                 )
-
 
         selectUser = SelectUser.objects.filter(user=request.user, select__poll_id=poll_id)
         if selectUser:

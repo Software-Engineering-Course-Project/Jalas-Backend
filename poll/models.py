@@ -14,16 +14,12 @@ class MeetingParticipant(models.Model):
 
 
 class Poll(models.Model):
-    POLL_STATUS = (
-        (1, 'open'),
-        (2, 'canceled'),
-    )
 
     title = models.CharField('عنوان', max_length=100)
     text = models.TextField('متن')
     meeting = models.ForeignKey(Meeting, related_name='polls', on_delete=models.CASCADE)
     date_close = models.DateField(verbose_name='تاریخ', default=timezone.now, null=True)
-    status = models.IntegerField('وضعیت رای‌گیری', choices=POLL_STATUS, default=1)
+    status = models.BooleanField('وضعیت رای‌گیری', default=False)
 
 
 class Select(models.Model):
