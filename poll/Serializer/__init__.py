@@ -37,3 +37,15 @@ class ShowPollSerializer:
         for index, val in enumerate(poll_list):
             poll_list[index]['fields']['state'] = True if poll.meeting.status != 1 else False
         return json.dumps(poll_list)
+
+
+class ShowPollsSerializer:
+
+    @staticmethod
+    def makeSerial(polls, user):
+        poll_json = serializers.serialize('json', polls)
+        poll_list = json.loads(poll_json)
+        for index, val in enumerate(poll_list):
+            poll_list[index]['fields']['state'] = True if polls.meeting.status != 1 else False
+            poll_list[index]['fields']['is_owner'] = True if polls.meeting.owner == user else False
+        return json.dumps(poll_list)

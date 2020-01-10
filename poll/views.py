@@ -13,7 +13,7 @@ from Jalas import settings
 from authentication.models import User
 from jalas_back.HttpResponces import HttpResponse404Error, HttpResponse999Error
 from meeting.models import Meeting
-from poll.Serializer import SelectSerializer, CommentSerializer, ShowPollSerializer
+from poll.Serializer import SelectSerializer, CommentSerializer, ShowPollSerializer, ShowPollsSerializer
 from poll.emails import send_email_arrange_meeting, send_email_add_option, send_email_add_participant, \
     send_email_new_vote, send_email_close_poll
 from poll.models import Poll, Select, MeetingParticipant, SelectUser
@@ -31,7 +31,7 @@ class PollsView(APIView):
             polls = []
             for mp in meetingParticipants:
                 polls.append(mp.meeting.polls.all()[0])
-            polls_json = serializers.serialize('json', polls)
+            polls_json = ShowPollsSerializer.makeSerial(polls, request.user)
             return HttpResponse(polls_json, content_type='application/json')
         except:
             return HttpResponse404Error(
