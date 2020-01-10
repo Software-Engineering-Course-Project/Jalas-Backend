@@ -54,5 +54,5 @@ class GetUserInfoView(APIView):
 
     def get(self, request):
         user = request.user
-        user_json = serializers.serialize('json', user)
+        user_json = serializers.serialize('json', [user])
         HttpResponse(user_json, content_type='application/json')
