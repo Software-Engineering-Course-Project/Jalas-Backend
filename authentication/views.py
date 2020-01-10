@@ -28,9 +28,20 @@ class LoginView(APIView):
 
 class RegisterView(APIView):
     def post(self, request):
-        username = request.data.get('username', None)
-        password = request.data.get('password', None)
-        email = request.data.get('password', None)
+        username = request.data.get('username', '')
+        password = request.data.get('password', '')
+        email = request.data.get('email', '')
         try:
-            if username and password and email
-            User.objects.create(username=username, )
+            if username != '' and password != '' and email != '':
+                User.objects.create(username=username, password=password, email=email)
+                return HttpResponse(
+                    "ثبت نام شما با موفقیت انجام شد"
+                )
+            return HttpResponse(
+                "ثبت نام شما با مشکل مواجه شد"
+            )
+        except:
+            return HttpResponse(
+                "ثبت نام شما ناموفق بود."
+            )
+
