@@ -377,4 +377,6 @@ class ClosePollView(APIView):
         meetPars = MeetingParticipant.objects.filter(meeting=poll.meeting)
         send_email_close_poll(request.user, poll, meetPars)
         poll_json = serializers.serialize('json', [poll])
-        return HttpResponse(poll_json, content_type='application/json')
+        return HttpResponse(
+            "نظرسنجی با موفقیت بسته شد."
+        )
