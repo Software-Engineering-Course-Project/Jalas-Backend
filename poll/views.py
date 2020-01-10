@@ -279,12 +279,12 @@ class ModifiedPollView(APIView):
         text = request.data.get('text', None)
         poll.text = text
         poll.title = title
+        poll.status = False
         poll.save()
         meeting = poll.meeting
         meeting.text = text
         meeting.title = title
         meeting.save()
-        poll.status = False
         link = request.data.get('link', 'No link')
         new_participants = request.data.get('participants', [])
         new_participants.append(request.user.email)

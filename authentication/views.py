@@ -6,6 +6,7 @@ from django.shortcuts import render
 from rest_framework.views import APIView
 
 from Jalas.settings import SITE_URL
+from authentication.models import User
 from jalas_back.HttpResponces import HttpResponse404Error
 
 
@@ -29,3 +30,7 @@ class RegisterView(APIView):
     def post(self, request):
         username = request.data.get('username', None)
         password = request.data.get('password', None)
+        email = request.data.get('password', None)
+        try:
+            if username and password and email
+            User.objects.create(username=username, )
