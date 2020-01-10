@@ -161,6 +161,9 @@ class SetCancel(APIView):
             meeting.isCancel = True
             meeting.status = 4
             meeting.room = None
+            poll = meeting.polls.all()[0]
+            poll.status = True
+            poll.save()
             meeting.save()
             meetPars = MeetingParticipant.objects.filter(meeting=meeting)
             send_email_cancel_meeting(request.user, meeting, meetPars)
