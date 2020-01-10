@@ -15,4 +15,5 @@ urlpatterns = [
     path('get_participants/<int:poll_id>', views.GetParticipantsView.as_view()),
     path('get_poll_title/<int:poll_id>', views.GetPollTitleView.as_view()),
     path('close/<int:poll_id>', views.ClosePollView.as_view()),
+    path('get_voter_name/<int:poll_id>', views.GetUserNameInAPollView.as_view()),
 ]
