@@ -33,7 +33,7 @@ class RegisterView(APIView):
         email = request.data.get('email', '')
         try:
             if username != '' and password != '' and email != '':
-                User.objects.create(username=username, password=password, email=email)
+                User.objects.create_user(username=username, password=password, email=email)
                 return HttpResponse(
                     "ثبت نام شما با موفقیت انجام شد"
                 )
