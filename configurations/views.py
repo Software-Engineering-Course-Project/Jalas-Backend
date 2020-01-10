@@ -43,6 +43,7 @@ class SetConfigView(APIView):
         conf.add_new_participant = add_new_participant
         conf.close_poll = close_poll
         conf.close_meeting = close_meeting
+        conf.save()
         conf_json = serializers.serialize('json', [conf])
         return HttpResponse(conf_json, content_type='json/application')
 

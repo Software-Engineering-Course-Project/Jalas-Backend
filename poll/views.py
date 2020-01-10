@@ -16,6 +16,7 @@ from meeting.models import Meeting
 from poll.Serializer import SelectSerializer, CommentSerializer, ShowPollSerializer, ShowPollsSerializer
 from poll.emails import send_email_arrange_meeting, send_email_add_option, send_email_add_participant, \
     send_email_new_vote, send_email_close_poll
+from poll.functions import check_poll_close
 from poll.models import Poll, Select, MeetingParticipant, SelectUser
 from rest_framework.permissions import IsAuthenticated
 
@@ -82,7 +83,7 @@ class GetPollTitleView(APIView):
                 'this poll doesn\'t exist.'
             })
 
-        if poll.status:
+        if check_poll_close(poll):
             return HttpResponse999Error(
                 "این نظرسنجی بسته شده است."
             )
@@ -121,19 +122,25 @@ class CreatePoll(APIView):
         text = request.data.get('text')
         link = request.data.get('link', 'No link')
         user = request.user
+        close_date = request.data.get('closeDate', '')
         participants = request.data.get('participants', [])
         selects = request.data.get('selects')
         meeting = Meeting(title=title, text=text, owner=user)
         meeting.save()
         poll = Poll(title=title, text=text, meeting=meeting)
+        if close_date:
+            poll.date_close = datetime.datetime.strptime(close_date, '%Y-%m-%d')
         poll.save()
         meetingParticipant = MeetingParticipant(meeting=meeting, participant=user)
         meetingParticipant.save()
         link += str(poll.id)
         self.create_participants(meeting, participants, user)
         self.createOptions(poll, selects)
+
+        check_poll_close(poll)
         poll_json = serializers.serialize('json', [poll])
         send_email_arrange_meeting(user, title, link, participants)
+
         try:
             return HttpResponse(poll_json, content_type='application/json')
 
@@ -171,9 +178,10 @@ class VotingView(APIView):
     def get(self, request, poll_id):
         try:
             poll = Poll.objects.get(id=poll_id)
-            if poll.status:
-                return HttpResponse404Error(
-                    "This poll was closed."
+
+            if check_poll_close(poll):
+                return HttpResponse999Error(
+                    "این نظرسنجی بسته شده است."
                 )
             selects = Select.objects.filter(poll_id=poll_id)
             selects_json = SelectSerializer.makeSerial(selects)
@@ -193,6 +201,11 @@ class VotingView(APIView):
         except:
             return HttpResponse404Error(
                 "This poll doesn\'t exist."
+            )
+
+        if check_poll_close(poll):
+            return HttpResponse999Error(
+                "این نظرسنجی بسته شده است."
             )
         poll_selects = poll.selects.all()
         for index, val in enumerate(selects):
@@ -285,8 +298,11 @@ class ModifiedPollView(APIView):
             )
         title = request.data.get('title', None)
         text = request.data.get('text', None)
+        close_date = request.data.get('closeDate', '')
         poll.text = text
         poll.title = title
+        if close_date:
+            poll.date_close = datetime.datetime.strptime(close_date, '%Y-%m-%d')
         poll.status = False
         poll.save()
         meeting = poll.meeting
