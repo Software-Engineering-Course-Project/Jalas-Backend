@@ -81,6 +81,11 @@ class GetPollTitleView(APIView):
             return HttpResponse404Error({
                 'this poll doesn\'t exist.'
             })
+
+        if poll.status:
+            return HttpResponse404Error(
+                "This poll was closed."
+            )
         return HttpResponse(
             '{"title": "' + poll.title + '" }', content_type='application/json'
         )
