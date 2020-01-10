@@ -401,7 +401,7 @@ class GetUserNameInAPollView(APIView):
     permission_classes = (IsAuthenticated, )
 
     def get(self, request, poll_id):
-        selectUsers = SelectUser.objects.filter(poll_id=poll_id)
+        selectUsers = SelectUser.objects.filter(select__poll_id=poll_id)
         name = ''
         for su in selectUsers:
             if su.user == request.user:
