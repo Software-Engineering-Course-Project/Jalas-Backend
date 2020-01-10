@@ -83,8 +83,8 @@ class GetPollTitleView(APIView):
             })
 
         if poll.status:
-            return HttpResponse404Error(
-                "This poll was closed."
+            return HttpResponse999Error(
+                "این نظرسنجی بسته شده است."
             )
         return HttpResponse(
             '{"title": "' + poll.title + '" }', content_type='application/json'
@@ -284,6 +284,7 @@ class ModifiedPollView(APIView):
         meeting.text = text
         meeting.title = title
         meeting.save()
+        poll.status = False
         link = request.data.get('link', 'No link')
         new_participants = request.data.get('participants', [])
         new_participants.append(request.user.email)
