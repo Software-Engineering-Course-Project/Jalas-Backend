@@ -140,7 +140,7 @@ class CreatePoll(APIView):
 
     def createOptions(self, poll, selects):
         for select in selects:
-            date = datetime.datetime.strptime(select['date'], '%d-%m-%Y')
+            date = datetime.datetime.strptime(select['date'], '%Y-%m-%d')
             startTime = datetime.datetime.strptime(select['start_time'], '%H:%M')
             endTime = datetime.datetime.strptime(select['end_time'], '%H:%M')
             select = Select(date=date, startTime=startTime, endTime=endTime, poll=poll)
@@ -308,8 +308,8 @@ class ModifiedPollView(APIView):
         has_new_select = False
         for select in selects:
             date = datetime.datetime.strptime(select['date'], '%Y-%m-%d')
-            startTime = datetime.datetime.strptime(select['start_time'], '%H:%M:%S')
-            endTime = datetime.datetime.strptime(select['end_time'], '%H:%M:%S')
+            startTime = datetime.datetime.strptime(select['start_time'], '%H:%M')
+            endTime = datetime.datetime.strptime(select['end_time'], '%H:%M')
             try:
                 old_select = Select.objects.get(date=date, startTime=startTime, endTime=endTime, poll=poll)
                 new_selects.append(old_select)

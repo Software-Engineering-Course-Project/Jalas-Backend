@@ -4,7 +4,7 @@ from Jalas import settings
 
 
 def send_email_arrange_meeting(user, title, link, participants):
-    # if user.configuration.arrange_meeting and participants:
+    if user.configuration.arrange_meeting and participants:
         try:
             send_mail(
                 subject=title,
@@ -17,7 +17,7 @@ def send_email_arrange_meeting(user, title, link, participants):
 
 
 def send_email_add_option(user, title, link, participants):
-    # if user.configuration.add_option and participants:
+    if user.configuration.add_option and participants:
         try:
             send_mail(
                 subject=title,
@@ -30,7 +30,7 @@ def send_email_add_option(user, title, link, participants):
 
 
 def send_email_add_participant(user, title, link, participants):
-    # if user.configuration.add_new_participant and participants:
+    if user.configuration.add_new_participant and participants:
         try:
             send_mail(
                 subject=title,
@@ -43,7 +43,7 @@ def send_email_add_participant(user, title, link, participants):
 
 
 def send_email_remove_option(user, title, link, participants):
-    # if user.configuration.remove_option and participants:
+    if user.configuration.remove_option and participants:
         try:
             send_mail(
                 subject=title,
@@ -56,7 +56,7 @@ def send_email_remove_option(user, title, link, participants):
 
 
 def send_email_new_vote(user, poll, to):
-    # if user.configuration.remove_option and to:
+    if user.configuration.remove_option and to:
         try:
             send_mail(
                 subject=poll.title,
@@ -69,7 +69,7 @@ def send_email_new_vote(user, poll, to):
 
 
 def send_email_close_poll(user, poll, meetPars):
-    # if user.configuration.close_poll:
+    if user.configuration.close_poll:
         participants = []
         for meetPar in meetPars:
             par = meetPar.participant
@@ -86,7 +86,7 @@ def send_email_close_poll(user, poll, meetPars):
 
 
 def send_email_cancel_meeting(user, meeting, meetPars):
-    # if user.configuration.close_meeting:
+    if user.configuration.close_meeting:
         participants = []
         for meetPar in meetPars:
             par = meetPar.participant
