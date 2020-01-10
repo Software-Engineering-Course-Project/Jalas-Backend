@@ -409,7 +409,7 @@ class GetUserNameInAPollView(APIView):
                 break
         if name:
             return HttpResponse(
-                '{"name": ' + name + '}', content_type='application/json'
+                '{"name": "' + name + '"}', content_type='application/json'
             )
         return HttpResponse404Error(
             "این کاربر تا به حال رای نداده است."
