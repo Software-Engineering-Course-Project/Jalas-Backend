@@ -394,3 +394,23 @@ class ClosePollView(APIView):
         return HttpResponse(
             "نظرسنجی با موفقیت بسته شد."
         )
+
+
+class GetUserNameInAPollView(APIView):
+
+    permission_classes = (IsAuthenticated, )
+
+    def get(self, request, poll_id):
+        selectUsers = SelectUser.objects.filter(poll_id=poll_id)
+        name = ''
+        for su in selectUsers:
+            if su.user == request.user:
+                name = su.name
+                break
+        if name:
+            return HttpResponse(
+                '{"name": ' + name + '}', content_type='application/json'
+            )
+        return HttpResponse404Error(
+            "این کاربر تا به حال رای نداده است."
+        )
