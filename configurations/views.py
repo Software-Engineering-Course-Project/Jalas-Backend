@@ -36,6 +36,7 @@ class SetConfigView(APIView):
         add_new_participant = request.data.get('add_new_participant', False)
         close_poll = request.data.get('close_poll', False)
         close_meeting = request.data.get('close_meeting', False)
+        create_poll = request.data.get('create_poll', False)
         conf.arrange_meeting = arrange_meeting
         conf.add_option = add_option
         conf.new_vote = new_vote
@@ -43,6 +44,7 @@ class SetConfigView(APIView):
         conf.add_new_participant = add_new_participant
         conf.close_poll = close_poll
         conf.close_meeting = close_meeting
+        conf.create_poll = create_poll
         conf.save()
         conf_json = serializers.serialize('json', [conf])
         return HttpResponse(conf_json, content_type='json/application')

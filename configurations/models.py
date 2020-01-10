@@ -6,6 +6,7 @@ from django.db import models
 
 class Configuration(models.Model):
     arrange_meeting = models.BooleanField('arrange_meeting', default=False)
+    create_poll = models.BooleanField('create_poll', default=False)
     add_option = models.BooleanField('add_option', default=False)
     new_vote = models.BooleanField('new_vote', default=False)
     remove_option = models.BooleanField('add_option', default=False)

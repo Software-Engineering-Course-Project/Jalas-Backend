@@ -3,7 +3,7 @@ from django.core.mail import send_mail
 from Jalas import settings
 
 
-def send_email_arrange_meeting(user, title, link, participants):
+def send_email_create_poll(user, title, link, participants):
     if user.configuration.arrange_meeting and participants:
         try:
             send_mail(
