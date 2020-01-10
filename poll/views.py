@@ -372,7 +372,7 @@ class ClosePollView(APIView):
             return HttpResponse404Error(
                 "No poll doesn\'t exist."
             )
-        poll.status = 2
+        poll.status = True
         poll.save()
         meetPars = MeetingParticipant.objects.filter(meeting=poll.meeting)
         send_email_close_poll(request.user, poll, meetPars)

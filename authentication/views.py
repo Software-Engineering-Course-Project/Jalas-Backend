@@ -23,3 +23,9 @@ class LoginView(APIView):
                 "User not found"
             )
         return HttpResponse(res, content_type='application/json')
+
+
+class RegisterView(APIView):
+    def post(self, request):
+        username = request.data.get('username', None)
+        password = request.data.get('password', None)
