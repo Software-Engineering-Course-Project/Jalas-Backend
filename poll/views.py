@@ -228,17 +228,25 @@ class GetVoterName(APIView):
                 selectUsers = SelectUser.objects.filter(select=select)
                 for s in selectUsers:
                     if s.name in names.keys():
-                        if s.agreement == 2:
+                        if s.agreement == 1:
+                            names[s.name][index] = 0
+                        elif s.agreement == 2:
                             names[s.name][index] = 1
                         elif s.agreement == 3:
                             names[s.name][index] = 2
+                        else:
+                            names[s.name][index] = -1
 
                     else:
-                        names[s.name] = [0 for i in range(len(poll_selects))]
-                        if s.agreement == 2:
+                        names[s.name] = [-1 for i in range(len(poll_selects))]
+                        if s.agreement == 1:
+                            names[s.name][index] = 0
+                        elif s.agreement == 2:
                             names[s.name][index] = 1
-                        if s.agreement == 3:
+                        elif s.agreement == 3:
                             names[s.name][index] = 2
+                        else:
+                            names[s.name][index] = -1
             res = []
             for name in names.keys():
                 ss = {}
