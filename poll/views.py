@@ -125,6 +125,8 @@ class CreatePoll(APIView):
         link = request.data.get('link', 'No link')
         user = request.user
         close_date = request.data.get('closeDate', '2424-2-2')
+        if not close_date:
+            close_date = '2424-2-2'
         participants = request.data.get('participants', [])
         selects = request.data.get('selects')
         meeting = Meeting(title=title, text=text, owner=user)

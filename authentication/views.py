@@ -1,8 +1,10 @@
 import requests
+from django.core import serializers
 from django.http import HttpResponse
 from django.shortcuts import render
 
 # Create your views here.
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.views import APIView
 
 from Jalas.settings import SITE_URL
@@ -45,3 +47,12 @@ class RegisterView(APIView):
                 "ثبت نام شما ناموفق بود."
             )
 
+
+class GetUserInfoView(APIView):
+
+    permission_classes = (IsAuthenticated, )
+
+    def get(self, request):
+        user = request.user
+        user_json = serializers.serialize('json', user)
+        HttpResponse(user_json, content_type='application/json')
