@@ -367,7 +367,9 @@ class ModifiedPollView(APIView):
         if has_new_select:
             send_email_add_option(request.user, title, link, participants)
         if new_old:
-            send_email_add_participant(request.user, title, link, participants)
+            send_email_add_participant(request.user, title, link, list(new_old), True)
+        if old_new:
+            send_email_add_participant(request.user, title, link, list(old_new), False)
         return HttpResponse(poll_json, content_type='application/json')
 
 class CanVoteView(APIView):

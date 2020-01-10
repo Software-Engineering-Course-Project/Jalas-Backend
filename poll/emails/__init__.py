@@ -29,12 +29,16 @@ def send_email_add_option(user, title, link, participants):
             print('Check your network connection')
 
 
-def send_email_add_participant(user, title, link, participants):
+def send_email_add_participant(user, title, link, participants, add):
     if user.configuration.add_new_participant and participants:
+        if add:
+            mess = 'You added to this poll participants \n' + link
+        else:
+            mess = 'You removed from this poll participants \n' + link
         try:
             send_mail(
                 subject=title,
-                message='You added added to this poll participants: \n' + link,
+                message=mess,
                 from_email=settings.EMAIL_HOST_USER,
                 recipient_list=participants
             )
