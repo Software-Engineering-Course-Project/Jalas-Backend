@@ -32,6 +32,8 @@ class PollsView(APIView):
             polls = []
             for mp in meetingParticipants:
                 polls.append(mp.meeting.polls.all()[0])
+            for poll in polls:
+                check_poll_close(poll)
             polls_json = ShowPollsSerializer.makeSerial(polls, request.user)
             return HttpResponse(polls_json, content_type='application/json')
         except:

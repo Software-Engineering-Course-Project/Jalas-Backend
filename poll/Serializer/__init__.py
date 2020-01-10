@@ -45,8 +45,6 @@ class ShowPollsSerializer:
 
     @staticmethod
     def makeSerial(polls, user):
-        for poll in polls:
-            check_poll_close(poll)
         poll_json = serializers.serialize('json', polls)
         poll_list = json.loads(poll_json)
         for index, val in enumerate(poll_list):
