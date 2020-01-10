@@ -21,8 +21,11 @@ class ShowLogs(APIView):
             reservatoinTimes = ReservationTime.objects.all()
             for reserve in reservatoinTimes:
                 reservedRoomNum += 1
-                start = reserve.reservationStartTime.strftime("%s")
-                end = reserve.reservationEndTime.strftime("%s")
+                if reserve.reservationStartTime and reserve.reservationEndTime:
+                    start = reserve.reservationStartTime.strftime("%s")
+                    end = reserve.reservationEndTime.strftime("%s")
+                else:
+                    continue
                 end = int(end) if end else None
                 start = int(start) if start else None
                 overall_time += (end - start) if (end != None and start != None) else 0
