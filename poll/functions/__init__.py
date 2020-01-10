@@ -11,7 +11,6 @@ def check_poll_close(poll):
     else:
         time = poll.date_close
     if poll.date_close:
-        print(type(timezone.now()), type(poll.date_close))
         delta = timezone.now().timestamp() - time.timestamp()
         if delta > -1:
             poll.status = True
