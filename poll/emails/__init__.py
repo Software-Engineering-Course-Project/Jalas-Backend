@@ -4,7 +4,7 @@ from Jalas import settings
 
 
 def send_email_create_poll(user, title, link, participants):
-    if user.configuration.arrange_meeting and participants:
+    if user.configuration.create_poll and participants:
         try:
             send_mail(
                 subject=title,
