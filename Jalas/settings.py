@@ -47,6 +47,9 @@ INSTALLED_APPS = [
     'rest_framework',
     'rest_framework.authtoken',
     'rest_framework_simplejwt',
+    'comment',
+    'configurations',
+    'authentication',
 ]
 
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
@@ -180,3 +183,5 @@ CORS_ORIGIN_ALLOW_ALL = True
 CORS_ALLOW_CREDENTIALS = False
 
 API_ADDRESS = 'http://5.253.27.176/'
+
+AUTH_USER_MODEL = 'authentication.User'

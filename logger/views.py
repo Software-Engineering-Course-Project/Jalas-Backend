@@ -21,8 +21,11 @@ class ShowLogs(APIView):
             reservatoinTimes = ReservationTime.objects.all()
             for reserve in reservatoinTimes:
                 reservedRoomNum += 1
-                start = reserve.reservationStartTime.strftime("%s")
-                end = reserve.reservationEndTime.strftime("%s")
+                if reserve.reservationStartTime and reserve.reservationEndTime:
+                    start = reserve.reservationStartTime.strftime("%s")
+                    end = reserve.reservationEndTime.strftime("%s")
+                else:
+                    continue
                 end = int(end) if end else None
                 start = int(start) if start else None
                 overall_time += (end - start) if (end != None and start != None) else 0
@@ -33,11 +36,11 @@ class ShowLogs(APIView):
             avg_res_time = self.getAverageResponseTime()
             throughput = self.get_throughput()
 
-            res = "Till now: <br> Average time duration for each reservation is " + str(avg) + ' sec '+\
-                "<br> " + 'Canceled meeting number is ' + str(canceledNumber) +\
-                "<br>" + 'Reserved Room number is ' + str(reservedRoomNum) +\
-                "<br>" + ('Average response time is %2.4f' % avg_res_time) +\
-                '<br>' + 'Throughput is ' + str(throughput)
+            res = "Till now: && Average time duration for each reservation is " + str(avg) + ' sec '+\
+                "&&" + 'Canceled meeting number is ' + str(canceledNumber) +\
+                "&&" + 'Reserved Room number is ' + str(reservedRoomNum) +\
+                "&&" + ('Average response time is %2.4f' % avg_res_time) +\
+                '&&' + 'Throughput is ' + str(throughput)
             return HttpResponse(res)
         return HttpResponse('You can\'t see logs.')
 
@@ -50,6 +53,6 @@ class ShowLogs(APIView):
 
     def get_throughput(self):
         this_time = time.time()
-        throughput_time = 1.0 * 60 * 5
+        throughput_time = 1.0 * 60
         tp = Throughput.objects.filter(create_date__gte=(this_time - throughput_time))
         return len(tp)

@@ -3,7 +3,7 @@ from django.test import Client
 from django.urls import resolve
 from poll.models import Poll, Select
 from meeting.models import Meeting
-from django.contrib.auth.models import User
+from authentication.models import User
 from poll.Serializer import SelectSerializer
 import json
 

@@ -1,7 +1,6 @@
 import datetime
 import json
 
-from django.contrib.auth.models import User
 from django.core import serializers
 from django.core.mail import send_mail
 from django.http import HttpResponse
@@ -11,10 +10,14 @@ from django.shortcuts import render
 from rest_framework.views import APIView
 
 from Jalas import settings
+from authentication.models import User
 from jalas_back.HttpResponces import HttpResponse404Error, HttpResponse999Error
 from meeting.models import Meeting
-from poll.Serializer import SelectSerializer, CommentSerializer, ShowPollSerializer
-from poll.models import Poll, Select, MeetingParticipant, SelectUser, Comment
+from poll.Serializer import SelectSerializer, CommentSerializer, ShowPollSerializer, ShowPollsSerializer
+from poll.emails import send_email_create_poll, send_email_add_option, send_email_add_participant, \
+    send_email_new_vote, send_email_close_poll
+from poll.functions import check_poll_close
+from poll.models import Poll, Select, MeetingParticipant, SelectUser
 from rest_framework.permissions import IsAuthenticated
 
 
@@ -24,8 +27,14 @@ class PollsView(APIView):
 
     def get(self, request):
         try:
-            polls = Poll.objects.filter(meeting__owner=request.user)
-            polls_json = serializers.serialize('json', polls)
+            # polls = Poll.objects.filter(meeting__owner=request.user)
+            meetingParticipants = MeetingParticipant.objects.filter(participant=request.user)
+            polls = []
+            for mp in meetingParticipants:
+                polls.append(mp.meeting.polls.all()[0])
+            for poll in polls:
+                check_poll_close(poll)
+            polls_json = ShowPollsSerializer.makeSerial(polls, request.user)
             return HttpResponse(polls_json, content_type='application/json')
         except:
             return HttpResponse404Error(
@@ -75,6 +84,11 @@ class GetPollTitleView(APIView):
             return HttpResponse404Error({
                 'this poll doesn\'t exist.'
             })
+
+        if check_poll_close(poll):
+            return HttpResponse999Error(
+                "این نظرسنجی بسته شده است."
+            )
         return HttpResponse(
             '{"title": "' + poll.title + '" }', content_type='application/json'
         )
@@ -110,15 +124,45 @@ class CreatePoll(APIView):
         text = request.data.get('text')
         link = request.data.get('link', 'No link')
         user = request.user
+        close_date = request.data.get('closeDate', '2424-2-2')
+        if not close_date:
+            close_date = '2424-2-2'
         participants = request.data.get('participants', [])
         selects = request.data.get('selects')
         meeting = Meeting(title=title, text=text, owner=user)
         meeting.save()
         poll = Poll(title=title, text=text, meeting=meeting)
+        if close_date:
+            poll.date_close = datetime.datetime.strptime(close_date, '%Y-%m-%d')
         poll.save()
         meetingParticipant = MeetingParticipant(meeting=meeting, participant=user)
         meetingParticipant.save()
         link += str(poll.id)
+        self.create_participants(meeting, participants, user)
+        self.createOptions(poll, selects)
+
+        check_poll_close(poll)
+        poll_json = serializers.serialize('json', [poll])
+        send_email_create_poll(user, title, link, participants)
+
+        try:
+            return HttpResponse(poll_json, content_type='application/json')
+
+        except Exception as e:
+            print(e)
+            return HttpResponse404Error(
+                "This poll doesn\'t exist."
+            )
+
+    def createOptions(self, poll, selects):
+        for select in selects:
+            date = datetime.datetime.strptime(select['date'], '%Y-%m-%d')
+            startTime = datetime.datetime.strptime(select['start_time'], '%H:%M')
+            endTime = datetime.datetime.strptime(select['end_time'], '%H:%M')
+            select = Select(date=date, startTime=startTime, endTime=endTime, poll=poll)
+            select.save()
+
+    def create_participants(self, meeting, participants, user):
         for participant in participants:
             try:
                 user = User.objects.get(email=participant)
@@ -129,36 +173,20 @@ class CreatePoll(APIView):
                 user.save()
                 meetingParticipant = MeetingParticipant(meeting=meeting, participant=user)
                 meetingParticipant.save()
-        for select in selects:
-            date = datetime.datetime.strptime(select['date'], '%d-%m-%Y')
-            startTime = datetime.datetime.strptime(select['start_time'], '%H:%M')
-            endTime = datetime.datetime.strptime(select['end_time'], '%H:%M')
-            select = Select(date=date, startTime=startTime, endTime=endTime, poll=poll)
-            select.save()
-        poll_json = serializers.serialize('json', [poll])
-        send_mail(
-            subject=title,
-            message=link,
-            from_email=settings.EMAIL_HOST_USER,
-            recipient_list=participants
-        )
-        try:
-            return HttpResponse(poll_json, content_type='application/json')
-
-        except Exception as e:
-            print(e)
-            return HttpResponse404Error(
-                "This poll doesn\'t exist."
-            )
 
 
 class VotingView(APIView):
-
 
     permission_classes = (IsAuthenticated,)
 
     def get(self, request, poll_id):
         try:
+            poll = Poll.objects.get(id=poll_id)
+
+            if check_poll_close(poll):
+                return HttpResponse999Error(
+                    "این نظرسنجی بسته شده است."
+                )
             selects = Select.objects.filter(poll_id=poll_id)
             selects_json = SelectSerializer.makeSerial(selects)
             return HttpResponse(selects_json, content_type='application/json')
@@ -176,44 +204,28 @@ class VotingView(APIView):
 
         except:
             return HttpResponse404Error(
-            "This poll doesn\'t exist."
+                "This poll doesn\'t exist."
+            )
+
+        if check_poll_close(poll):
+            return HttpResponse999Error(
+                "این نظرسنجی بسته شده است."
             )
         poll_selects = poll.selects.all()
-        # TODO: create selcetUSer
         for index, val in enumerate(selects):
-            if val == 1:
+            try:
                 try:
-                    try:
-                        selectUser = SelectUser.objects.get(select=poll_selects[index], user=user, name=name)
-                        selectUser.agreement = 2
-                        selectUser.save()
-                    except:
-                        selectUser = SelectUser(select=poll_selects[index], user=user, agreement=2, name=name)
-                        selectUser.save()
-                except Exception as e:
-                    return  HttpResponse404Error(
-                        "One of the options not found."
-                    )
-            if val == 0:
-                try:
-                    try:
-                        selectUser = SelectUser.objects.get(select=poll_selects[index], user=user, name=name)
-                        selectUser.agreement = 1
-                        selectUser.save()
-                    except:
-                        selectUser = SelectUser(select=poll_selects[index], user=user, agreement=1, name=name)
-                        selectUser.save()
-                except Exception as e:
-                    return  HttpResponse404Error(
-                        "One of the options not found."
-                    )
-
-        send_mail(
-            subject=poll.title,
-            message='Your voted successfully',
-            from_email=settings.EMAIL_HOST_USER,
-            recipient_list=[user.email]
-        )
+                    selectUser = SelectUser.objects.get(select=poll_selects[index], user=user, name=name)
+                    selectUser.agreement = val + 1
+                    selectUser.save()
+                except:
+                    selectUser = SelectUser(select=poll_selects[index], user=user, agreement=val + 1, name=name)
+                    selectUser.save()
+            except Exception as e:
+                return  HttpResponse404Error(
+                    "One of the options not found."
+                )
+        send_email_new_vote(user, poll, user.email)
         return HttpResponse(
             "Submit successfully"
         )
@@ -233,12 +245,25 @@ class GetVoterName(APIView):
                 selectUsers = SelectUser.objects.filter(select=select)
                 for s in selectUsers:
                     if s.name in names.keys():
-                        if s.agreement == 2:
+                        if s.agreement == 1:
+                            names[s.name][index] = 0
+                        elif s.agreement == 2:
                             names[s.name][index] = 1
+                        elif s.agreement == 3:
+                            names[s.name][index] = 2
+                        else:
+                            names[s.name][index] = -1
+
                     else:
-                        names[s.name] = [0 for i in range(len(poll_selects))]
-                        if s.agreement == 2:
+                        names[s.name] = [-1 for i in range(len(poll_selects))]
+                        if s.agreement == 1:
+                            names[s.name][index] = 0
+                        elif s.agreement == 2:
                             names[s.name][index] = 1
+                        elif s.agreement == 3:
+                            names[s.name][index] = 2
+                        else:
+                            names[s.name][index] = -1
             res = []
             for name in names.keys():
                 ss = {}
@@ -264,40 +289,6 @@ class GetLastPoll(APIView):
                 "No poll doesn\'t exist."
             )
 
-class AddCommentView(APIView):
-
-    permission_classes = (IsAuthenticated, )
-
-    def post(self, request, poll_id):
-        try:
-            poll = Poll.objects.get(id=poll_id)
-            meeting = poll.meeting
-            text = request.data.get('text')
-            owner = request.user
-            if not MeetingParticipant.objects.filter(participant=owner, meeting=meeting):
-                return HttpResponse404Error(
-                    "You don\'t have permission to comment on this poll"
-                )
-
-            comment = Comment(owner=owner, poll=poll, text=text)
-            comment.save()
-            comment_json = serializers.serialize('json', [comment])
-            return HttpResponse(comment_json, content_type='application/json')
-        except:
-            return HttpResponse404Error(
-                "No poll doesn\'t exist."
-            )
-
-
-class GetCommentView(APIView):
-    permission_classes = (IsAuthenticated,)
-
-    def get(self, request, poll_id):
-        comments = Comment.objects.filter(poll_id=poll_id)
-        comments_json = CommentSerializer.makeSerial(comments)
-        return HttpResponse(comments_json, content_type='application/json')
-
-
 class ModifiedPollView(APIView):
 
     permission_classes = (IsAuthenticated,)
@@ -311,8 +302,12 @@ class ModifiedPollView(APIView):
             )
         title = request.data.get('title', None)
         text = request.data.get('text', None)
+        close_date = request.data.get('closeDate', '2424-2-2')
         poll.text = text
         poll.title = title
+        if close_date:
+            poll.date_close = datetime.datetime.strptime(close_date, '%Y-%m-%d')
+        poll.status = False
         poll.save()
         meeting = poll.meeting
         meeting.text = text
@@ -349,13 +344,15 @@ class ModifiedPollView(APIView):
                 meetingParticipant.save()
         old_selects = poll.selects.all()
         new_selects = []
+        has_new_select = False
         for select in selects:
             date = datetime.datetime.strptime(select['date'], '%Y-%m-%d')
-            startTime = datetime.datetime.strptime(select['start_time'], '%H:%M:%S')
-            endTime = datetime.datetime.strptime(select['end_time'], '%H:%M:%S')
+            startTime = datetime.datetime.strptime(select['start_time'], '%H:%M')
+            endTime = datetime.datetime.strptime(select['end_time'], '%H:%M')
             try:
                 old_select = Select.objects.get(date=date, startTime=startTime, endTime=endTime, poll=poll)
                 new_selects.append(old_select)
+                has_new_select = True
             except:
                 new_select = Select(date=date, startTime=startTime, endTime=endTime, poll=poll)
                 new_select.save()
@@ -366,16 +363,15 @@ class ModifiedPollView(APIView):
                 if old_select.id == new_select.id:
                     flag = False
             if flag:
-                old_select.delete()
-
+                old_select.delete_me(request.user, title, link)
         poll_json = serializers.serialize('json', [poll])
         participants = old_participants.union(new_participants)
-        send_mail(
-            subject=title,
-            message='This poll was changed \n' + link,
-            from_email=settings.EMAIL_HOST_USER,
-            recipient_list=participants
-        )
+        if has_new_select:
+            send_email_add_option(request.user, title, link, participants)
+        if new_old:
+            send_email_add_participant(request.user, title, link, list(new_old), True)
+        if old_new:
+            send_email_add_participant(request.user, title, link, list(old_new), False)
         return HttpResponse(poll_json, content_type='application/json')
 
 class CanVoteView(APIView):
@@ -391,7 +387,6 @@ class CanVoteView(APIView):
                     "{\"value\": 2}", content_type='application/json'
                 )
 
-
         selectUser = SelectUser.objects.filter(user=request.user, select__poll_id=poll_id)
         if selectUser:
             return HttpResponse(
@@ -400,3 +395,44 @@ class CanVoteView(APIView):
         return HttpResponse(
                 "{\"value\": 1}", content_type='application/json'
             )
+
+
+class ClosePollView(APIView):
+
+    permission_classes = (IsAuthenticated, )
+
+    def get(self, request, poll_id):
+        try:
+            poll = Poll.objects.get(id=poll_id)
+        except:
+            return HttpResponse404Error(
+                "No poll doesn\'t exist."
+            )
+        poll.status = True
+        poll.save()
+        meetPars = MeetingParticipant.objects.filter(meeting=poll.meeting)
+        send_email_close_poll(request.user, poll, meetPars)
+        poll_json = serializers.serialize('json', [poll])
+        return HttpResponse(
+            "نظرسنجی با موفقیت بسته شد."
+        )
+
+
+class GetUserNameInAPollView(APIView):
+
+    permission_classes = (IsAuthenticated, )
+
+    def get(self, request, poll_id):
+        selectUsers = SelectUser.objects.filter(select__poll_id=poll_id)
+        name = ''
+        for su in selectUsers:
+            if su.user == request.user:
+                name = su.name
+                break
+        if name:
+            return HttpResponse(
+                '{"name": "' + name + '"}', content_type='application/json'
+            )
+        return HttpResponse404Error(
+            "این کاربر تا به حال رای نداده است."
+        )

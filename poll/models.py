@@ -1,10 +1,11 @@
-from django.contrib.auth.models import User
+from authentication.models import User
 from django.db import models
 
 # Create your models here.
 from django.utils import timezone
 
 from meeting.models import Meeting
+from poll.emails import send_email_remove_option
 
 
 class MeetingParticipant(models.Model):
@@ -13,9 +14,12 @@ class MeetingParticipant(models.Model):
 
 
 class Poll(models.Model):
+
     title = models.CharField('عنوان', max_length=100)
     text = models.TextField('متن')
     meeting = models.ForeignKey(Meeting, related_name='polls', on_delete=models.CASCADE)
+    date_close = models.DateField(verbose_name='تاریخ', default=timezone.now, null=True)
+    status = models.BooleanField('وضعیت رای‌گیری', default=False)
 
 
 class Select(models.Model):
@@ -40,22 +44,34 @@ class Select(models.Model):
                 count += 1
         return count
 
+    @property
+    def getIfNeededNumber(self):
+        count = 0
+        for vote in self.voted.all():
+            if vote.agreement == 3:
+                count += 1
+        return count
+
     agree = getAgreeNumber
     disagree = getDisagreeNumber
+    ifNeeded = getIfNeededNumber
 
+    def delete_me(self, user, link, title):
+        voteds = self.voted.all()
+        participants = []
+        for vote in voteds:
+            participants.append(vote.user.email)
+        send_email_remove_option(user, title, link, participants)
+        self.delete()
 
 
 class SelectUser(models.Model):
     AGGREMENT_CHOICE = (
         (1, 'خیر'),
-        (2, 'بله')
+        (2, 'بله'),
+        (3, 'اگر مجبور بودم می‌آیم')
     )
     user = models.ForeignKey(User, related_name='voted', default=None, on_delete=models.CASCADE)
     select = models.ForeignKey(Select, related_name='voted', default=None, on_delete=models.CASCADE)
     agreement = models.IntegerField(verbose_name='نظر', null=True, choices=AGGREMENT_CHOICE)
     name = models.CharField(verbose_name='نام شرکت کننده', max_length=100, default=None)
-
-class Comment(models.Model):
-    owner = models.ForeignKey(User, related_name='comments', default=None, on_delete=models.CASCADE)
-    text = models.TextField('متن')
-    poll = models.ForeignKey(Poll, related_name='comments', on_delete=models.CASCADE, default=None)
