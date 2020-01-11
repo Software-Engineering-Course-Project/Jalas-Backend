@@ -233,8 +233,6 @@ class VotingView(APIView):
 
 
 class GetVoterName(APIView):
-
-
     permission_classes = (IsAuthenticated,)
 
     def get(self, request, poll_id):
@@ -244,27 +242,13 @@ class GetVoterName(APIView):
             poll_selects = poll.selects.all()
             for index, select in enumerate(poll_selects):
                 selectUsers = SelectUser.objects.filter(select=select)
-                for s in selectUsers:
-                    if s.name in names.keys():
-                        if s.agreement == 1:
-                            names[s.name][index] = 0
-                        elif s.agreement == 2:
-                            names[s.name][index] = 1
-                        elif s.agreement == 3:
-                            names[s.name][index] = 2
-                        else:
-                            names[s.name][index] = -1
+                for select_user in selectUsers:
+                    if select_user.name in names.keys():
+                        names = self.fill_vote_of_participants(select_user, names, index)
 
                     else:
-                        names[s.name] = [-1 for i in range(len(poll_selects))]
-                        if s.agreement == 1:
-                            names[s.name][index] = 0
-                        elif s.agreement == 2:
-                            names[s.name][index] = 1
-                        elif s.agreement == 3:
-                            names[s.name][index] = 2
-                        else:
-                            names[s.name][index] = -1
+                        names[select_user.name] = [-1 for i in range(len(poll_selects))]
+                        names = self.fill_vote_of_participants(select_user, names, index)
             res = []
             for name in names.keys():
                 ss = {}
@@ -278,6 +262,18 @@ class GetVoterName(APIView):
                 "This poll doesn\'t exist."
             )
 
+    def fill_vote_of_participants(self, select_user, names, select_index):
+        if select_user.agreement == 1:
+            names[select_user.name][select_index] = 0
+        elif select_user.agreement == 2:
+            names[select_user.name][select_index] = 1
+        elif select_user.agreement == 3:
+            names[select_user.name][select_index] = 2
+        else:
+            names[select_user.name][select_index] = -1
+
+        return names
+
 
 class GetLastPoll(APIView):
     def get(self, request):
@@ -290,38 +286,11 @@ class GetLastPoll(APIView):
                 "No poll doesn\'t exist."
             )
 
-class ModifiedPollView(APIView):
 
+class ModifiedPollView(APIView):
     permission_classes = (IsAuthenticated,)
 
-    def post(self, request, poll_id):
-        try:
-           poll = Poll.objects.get(id=poll_id, meeting__owner=request.user)
-        except:
-            return HttpResponse404Error(
-                "No poll doesn\'t exist or you can\'t access to modified this poll."
-            )
-        title = request.data.get('title', None)
-        text = request.data.get('text', None)
-        close_date = request.data.get('closeDate', '2424-2-2')
-        poll.text = text
-        poll.title = title
-        if close_date:
-            poll.date_close = datetime.datetime.strptime(close_date, '%Y-%m-%d')
-        poll.status = False
-        poll.save()
-        meeting = poll.meeting
-        meeting.text = text
-        meeting.title = title
-        meeting.save()
-        link = request.data.get('link', 'No link')
-        new_participants = request.data.get('participants', [])
-        new_participants.append(request.user.email)
-        selects = request.data.get('selects')
-        meetingParticipants = MeetingParticipant.objects.filter(meeting=poll.meeting)
-        old_participants = []
-        for par in meetingParticipants:
-            old_participants.append(par.participant.email)
+    def update_poll_participants_and_notify(self, old_participants, new_participants, poll, user, title, link):
         old_participants = set(old_participants)
         new_participants = set(new_participants)
         old_new = old_participants.difference(new_participants)
@@ -343,7 +312,15 @@ class ModifiedPollView(APIView):
                 user.save()
                 meetingParticipant = MeetingParticipant(meeting=poll.meeting, participant=user)
                 meetingParticipant.save()
-        old_selects = poll.selects.all()
+
+        if new_old:
+            send_email_add_participant(user, title, link, list(new_old), True)
+        if old_new:
+            send_email_add_participant(user, title, link, list(old_new), False)
+
+        return old_participants.union(new_participants)
+
+    def update_poll_selects_and_notify(self, old_selects, selects, poll, user, title, link, participants):
         new_selects = []
         has_new_select = False
         for select in selects:
@@ -364,19 +341,61 @@ class ModifiedPollView(APIView):
                 if old_select.id == new_select.id:
                     flag = False
             if flag:
-                old_select.delete_me(request.user, title, link)
-        poll_json = serializers.serialize('json', [poll])
-        participants = old_participants.union(new_participants)
+                old_select.delete_me(user, title, link)
+
         if has_new_select:
-            send_email_add_option(request.user, title, link, participants)
-        if new_old:
-            send_email_add_participant(request.user, title, link, list(new_old), True)
-        if old_new:
-            send_email_add_participant(request.user, title, link, list(old_new), False)
+            send_email_add_option(user, title, link, participants)
+
+    def update_poll(self, user, poll_id, text, title, close_date):
+        try:
+            poll = Poll.objects.get(id=poll_id, meeting__owner=user)
+        except:
+            return HttpResponse404Error(
+                "No poll doesn\'t exist or you can\'t access to modified this poll."
+            )
+        poll.text = text
+        poll.title = title
+        if close_date:
+            poll.date_close = datetime.datetime.strptime(close_date, '%Y-%m-%d')
+        poll.status = False
+        poll.save()
+        meeting = poll.meeting
+        meeting.text = text
+        meeting.title = title
+        meeting.save()
+
+        return poll
+
+    def post(self, request, poll_id):
+
+        title = request.data.get('title', None)
+        text = request.data.get('text', None)
+        close_date = request.data.get('closeDate', '2424-2-2')
+
+        poll = self.update_poll(request.user, poll_id, text, title, close_date)
+
+        link = request.data.get('link', 'No link')
+        new_participants = request.data.get('participants', [])
+        new_participants.append(request.user.email)
+        selects = request.data.get('selects')
+        meetingParticipants = MeetingParticipant.objects.filter(meeting=poll.meeting)
+        old_participants = []
+        old_selects = poll.selects.all()
+
+        for par in meetingParticipants:
+            old_participants.append(par.participant.email)
+
+        participants = self.update_poll_participants_and_notify(old_participants, new_participants, poll, request.user,
+                                                                title, link)
+
+        self.update_poll_selects_and_notify(old_selects, selects, poll, request.user, title, link, participants)
+
+        poll_json = serializers.serialize('json', [poll])
+
         return HttpResponse(poll_json, content_type='application/json')
 
-class CanVoteView(APIView):
 
+class CanVoteView(APIView):
     permission_classes = (IsAuthenticated,)
 
     def get(self, request, poll_id):
@@ -385,8 +404,8 @@ class CanVoteView(APIView):
             meetingParticipant = MeetingParticipant.objects.get(participant=request.user, meeting=poll.meeting)
         except:
             return HttpResponse(
-                    "{\"value\": 2}", content_type='application/json'
-                )
+                "{\"value\": 2}", content_type='application/json'
+            )
 
         selectUser = SelectUser.objects.filter(user=request.user, select__poll_id=poll_id)
         if selectUser:
@@ -394,13 +413,12 @@ class CanVoteView(APIView):
                 "{\"value\": 0}", content_type='application/json'
             )
         return HttpResponse(
-                "{\"value\": 1}", content_type='application/json'
-            )
+            "{\"value\": 1}", content_type='application/json'
+        )
 
 
 class ClosePollView(APIView):
-
-    permission_classes = (IsAuthenticated, )
+    permission_classes = (IsAuthenticated,)
 
     def get(self, request, poll_id):
         try:
@@ -420,8 +438,7 @@ class ClosePollView(APIView):
 
 
 class GetUserNameInAPollView(APIView):
-
-    permission_classes = (IsAuthenticated, )
+    permission_classes = (IsAuthenticated,)
 
     def get(self, request, poll_id):
         selectUsers = SelectUser.objects.filter(select__poll_id=poll_id)
