@@ -10,7 +10,7 @@ def send_email_create_poll(user, title, link, participants):
                 subject=title,
                 message=link,
                 from_email=settings.EMAIL_HOST_USER,
-                recipient_list=participants
+                recipient_list=participants + [user.email]
             )
         except:
             print('Check your network connection')
@@ -60,7 +60,7 @@ def send_email_remove_option(user, title, link, participants):
 
 
 def send_email_new_vote(user, poll, to):
-    if user.configuration.remove_option and to:
+    if user.configuration.new_vote:
         try:
             send_mail(
                 subject=poll.title,
