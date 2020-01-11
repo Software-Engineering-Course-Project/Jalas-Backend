@@ -214,11 +214,12 @@ class VotingView(APIView):
         poll_selects = poll.selects.all()
         for index, val in enumerate(selects):
             try:
-                try:
-                    selectUser = SelectUser.objects.get(select=poll_selects[index], user=user, name=name)
+                selectUser = SelectUser.objects.filter(select=poll_selects[index], user=user, name=name)
+                if selectUser:
+                    selectUser = selectUser[0]
                     selectUser.agreement = val + 1
                     selectUser.save()
-                except:
+                else:
                     selectUser = SelectUser(select=poll_selects[index], user=user, agreement=val + 1, name=name)
                     selectUser.save()
             except Exception as e:
